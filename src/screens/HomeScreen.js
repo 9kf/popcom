@@ -20,9 +20,9 @@ export const HomeScreen = ({navigation}) => {
     const { getUser } = useContext(AuthContext);
     const { first_name} = getUser();
 
-    useEffect(()=>{
-        console.log(getUser());
-    },[])
+    // useEffect(()=>{
+    //     console.log(getUser());
+    // },[])
 
   return (
     <View style={profileStyles.container}>

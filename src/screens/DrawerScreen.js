@@ -15,37 +15,37 @@ export const DrawerScreen = (props) => {
     const drawerItems = [
         {
             iconName: 'home',
-            pressFunction: () => alert('to be implemented'),
+            pressFunction: () => props.navigation.navigate('Home'),
             label:'Home'
         },
         {
             iconName: 'box',
-            pressFunction: () => alert('to be implemented'),
+            pressFunction: () => console.log('to be implemented'),
             label:'Item Master'
         },
         {
             iconName: 'store',
-            pressFunction: () => alert('to be implemented'),
+            pressFunction: () => props.navigation.navigate('Inventory'),
             label:'Inventory'
         },
         {
             iconName: 'hand-holding-heart',
-            pressFunction: () => alert('to be implemented'),
+            pressFunction: () => console.log('to be implemented'),
             label:'Dispense Inventory'
         },
         {
             iconName: 'truck',
-            pressFunction: () => alert('to be implemented'),
+            pressFunction: () => console.log('to be implemented'),
             label:'Request Inventory'
         },
         {
             iconName: 'truck-loading',
-            pressFunction: () => alert('to be implemented'),
+            pressFunction: () => console.log('to be implemented'),
             label:'Receive Inventory'
         },
         {
             iconName: 'chart-area',
-            pressFunction: () => alert('to be implemented'),
+            pressFunction: () => console.log('to be implemented'),
             label:'Generate Report'
         }
     ]

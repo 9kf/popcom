@@ -4,7 +4,7 @@ import { StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native'
 import { createDrawerNavigator } from '@react-navigation/drawer';
 
-import { DrawerScreen, HomeScreen, ItemMasterScreen } from '../screens'
+import { DrawerScreen, HomeScreen, ItemMasterScreen, InventoryScreen } from '../screens'
 
 const DrawerNav = createDrawerNavigator();
 
@@ -14,6 +14,7 @@ export const DrawerNavigation = () => {
         <DrawerNav.Navigator drawerStyle={styles.drawerStyle} drawerContent={(props) => <DrawerScreen {...props}/>}>
             <DrawerNav.Screen name="Home" component={HomeScreen}/>
             <DrawerNav.Screen name="ItemMaster" component={ItemMasterScreen}/>
+            <DrawerNav.Screen name="Inventory" component={InventoryScreen}/>
         </DrawerNav.Navigator>
     </NavigationContainer>
   );
