@@ -11,12 +11,12 @@ import {
   View,
 } from 'react-native';
 
-import LoginScreen from './src/screens/LoginScreen'
+import { DrawerNavigation } from './navigation'
 
 const App = () => {
   return (
     <View style={{flex:1}}>
-      <LoginScreen/>
+      <DrawerNavigation/>
     </View>
   );
 };
