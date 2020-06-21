@@ -8,12 +8,10 @@ import {
 
 const title = require('../../images/title/title.png')
 
-const RootStack = () => {
+export const ItemMasterScreen = () => {
   return (
     <View>
         <Text>HELLO</Text>
     </View>
   );
 };
-
-export default RootStack;

@@ -14,7 +14,7 @@ const logo = require('../../images/logo/popcom-logo.png')
 const title = require('../../images/title/title.png')
 
 
-const LoginScreen = () => {
+export const LoginScreen = () => {
   return (
     <View style={styles.container}>
         <View style={styles.endsPadding}/>
@@ -75,6 +75,4 @@ const styles = StyleSheet.create({
         fontSize: 8,
         color: 'gray'
     }
-})
-
-export default LoginScreen;
+});

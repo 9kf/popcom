@@ -13,7 +13,7 @@ import { ScrollView } from 'react-native-gesture-handler';
 
 const title = require('../../images/title/title.png')
 
-const HomeScreen = ({navigation}) => {
+export const HomeScreen = ({navigation}) => {
   return (
     <View style={profileStyles.container}>
         <View style={profileStyles.profileSection}>
@@ -159,6 +159,4 @@ const numbersStyles = StyleSheet.create({
 const optionStyles = StyleSheet.create({
     optionsSection: {flexGrow: 1, alignSelf:'stretch', justifyContent:'space-evenly'},
     card: { flexGrow: 0.5, alignItems:'center'}
-})
-
-export default HomeScreen;
+});
