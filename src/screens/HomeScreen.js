@@ -64,7 +64,8 @@ export const HomeScreen = ({navigation}) => {
                             type="font-awesome-5"
                             size={42}
                             color="#00CEC9"
-                            style={{ marginBottom: 4 }} />
+                            style={{ marginBottom: 4 }} 
+                            onPress={()=>navigation.navigate('Inventory')}/>
                         <Text style={{fontSize: 12, color:'#00CEC9', alignSelf:'center'}}>View</Text>
                         <Text style={{fontSize: 12, color:'#00CEC9', alignSelf:'center'}}>Inventory</Text>
                     </Card>
