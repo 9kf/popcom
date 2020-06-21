@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useContext, useEffect } from 'react';
 
 import {
   View,
@@ -11,17 +11,27 @@ import {
 import { Card, Icon } from 'react-native-elements';
 import { ScrollView } from 'react-native-gesture-handler';
 
-const title = require('../../images/title/title.png')
+import { AuthContext } from '../context';
+
+const userPlaceholder = require('../../images/user-placeholder/user-placeholder.png')
 
 export const HomeScreen = ({navigation}) => {
+
+    const { getUser } = useContext(AuthContext);
+    const { first_name} = getUser();
+
+    useEffect(()=>{
+        console.log(getUser());
+    },[])
+
   return (
     <View style={profileStyles.container}>
         <View style={profileStyles.profileSection}>
             <TouchableOpacity onPress={()=> navigation.openDrawer()}>
-                <Image source={title} style={profileStyles.profilePic} resizeMode={'contain'} />
+                <Image source={userPlaceholder} style={profileStyles.profilePic} resizeMode={'contain'} />
             </TouchableOpacity>
             <View style={profileStyles.profileInfoSection}>
-                <Text style={profileStyles.userName}>Welcome Diane</Text>
+                <Text style={profileStyles.userName}>{`Welcome ${first_name}`}</Text>
                 <Text style={profileStyles.subHeaderText}>What are your goals today?</Text>
             </View>
         </View>

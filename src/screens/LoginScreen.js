@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useContext, useState } from 'react';
 
 import {
   View,
@@ -10,11 +10,44 @@ import {
 } from 'react-native';
 import { Button } from 'react-native-elements';
 
+import { AuthContext } from '../context';
+
 const logo = require('../../images/logo/popcom-logo.png')
 const title = require('../../images/title/title.png')
+const popcomURL = "https://www.popcom.app";
 
 
 export const LoginScreen = () => {
+
+    const { login } = useContext(AuthContext);
+
+    const [userName, setUserName] = useState('');
+    const [password, setPassword] = useState('');
+
+    const resetForm = () => {
+        setUserName('');
+        setPassword('')
+    }
+
+    const fetchUser = async (ev) => {
+        const endpoint = popcomURL + `/api/login?email=${userName}&password=${password}`;
+        const response = await fetch(endpoint, {
+            headers: {
+                accept: "application/json"
+            },
+            method: 'post'
+        });
+
+        if(!response.ok){
+            alert('Incorrect username or password');
+            return;
+        }
+
+        const json = await response.json();
+        login(json);
+        resetForm();
+    }
+
   return (
     <View style={styles.container}>
         <View style={styles.endsPadding}/>
@@ -25,12 +58,13 @@ export const LoginScreen = () => {
             <Image source={title}/>
             
             <View style={styles.form}>
-                <TextInput placeholder={'Username / Email'}/>
-                <TextInput placeholder={'Password'}/>
+                <TextInput placeholder={'Username / Email'} onChangeText={(newText)=>setUserName(newText)}/>
+                <TextInput placeholder={'Password'} secureTextEntry={true} onChangeText={(newText)=>setPassword(newText)}/>
                 <Button 
                     title={'Login'}
                     buttonStyle={styles.loginButton}
-                    type={'solid'}/>
+                    type={'solid'}
+                    onPress={fetchUser} />
             </View>
             
             <View style={styles.footer}>

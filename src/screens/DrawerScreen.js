@@ -1,11 +1,16 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { View, Text, StyleSheet, Image } from 'react-native';
 import { DrawerContentScrollView, DrawerItem } from '@react-navigation/drawer';
 import { Icon } from 'react-native-elements';
 
-const placeholder = require('../../images/title/title.png')
+import { AuthContext } from '../context';
+
+const userPlaceholder = require('../../images/user-placeholder/user-placeholder.png')
 
 export const DrawerScreen = (props) => {
+
+    const { logout, getUser } = useContext(AuthContext);
+    const { first_name, last_name, roles } = getUser();
 
     const drawerItems = [
         {
@@ -48,19 +53,20 @@ export const DrawerScreen = (props) => {
     return (
         <View style={styles.container}>
             <View style={styles.userInfo}>
-                <Image source={placeholder} style={styles.profilePic} resizeMode={'contain'} />
+                <Image source={userPlaceholder} style={styles.profilePic} resizeMode={'contain'} />
                 <View style={{justifyContent:'center'}}>
-                    <Text style={styles.name}>Diane Mae Sanchez</Text>
-                    <Text style={styles.jobTitle}>Regional Director</Text>
+                    <Text style={styles.name}>{`${first_name} ${last_name}`}</Text>
+                    <Text style={styles.jobTitle}>{`${roles}`}</Text>
                 </View>
             </View>
 
             <DrawerContentScrollView {...props} showsVerticalScrollIndicator={false}>
                 <View style={{flex: 1}}>
                     {
-                        drawerItems.splice(0, drawerItems.length - 4).map((item)=> {
+                        drawerItems.splice(0, drawerItems.length - 4).map((item, index)=> {
                             return (
                                 <DrawerItem 
+                                    key={index}
                                     icon={({color, size}) => (
                                         <Icon 
                                             name={item.iconName}
@@ -96,9 +102,10 @@ export const DrawerScreen = (props) => {
                     <Text style={styles.sectionHeader}>S U P P L Y  C H A I N</Text>
                     
                     {
-                        drawerItems.splice(1, drawerItems.length-2).map((item)=> {
+                        drawerItems.splice(1, drawerItems.length-2).map((item, index)=> {
                             return (
                                 <DrawerItem 
+                                    key={index}
                                     icon={({color, size}) => (
                                         <Icon 
                                             name={item.iconName}
@@ -118,9 +125,10 @@ export const DrawerScreen = (props) => {
                     <Text style={styles.sectionHeader}>R E P O R T</Text>
 
                     {
-                        drawerItems.splice(1, drawerItems.length).map((item)=> {
+                        drawerItems.splice(1, drawerItems.length).map((item, index)=> {
                             return (
                                 <DrawerItem 
+                                    key={index}
                                     icon={({color, size}) => (
                                         <Icon 
                                             name={item.iconName}
@@ -150,7 +158,7 @@ export const DrawerScreen = (props) => {
                     )}
                     label="Logout"
                     labelStyle={{ color:"#24562F" }}
-                    onPress={() => alert('logout')}
+                    onPress={logout}
                 />
             </View>
 
