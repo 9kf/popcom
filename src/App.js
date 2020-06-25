@@ -17,14 +17,17 @@ const App = () => {
       setUser(null);
     },
     getUser: () => {
-      return user.data;
+      return user
+        ? user.data
+        : {first_name: 'ohoy', last_name: 'oyea', roles: 'huhuhu'};
     },
   };
 
   return (
     <AuthContext.Provider value={authContext}>
       <View style={{flex: 1}}>
-        {user ? <DrawerNavigation /> : <LoginScreen />}
+        <DrawerNavigation />
+        {/* {user ? <DrawerNavigation /> : <LoginScreen />} */}
       </View>
     </AuthContext.Provider>
   );
