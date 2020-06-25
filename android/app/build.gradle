@@ -150,6 +150,12 @@ android {
             keyAlias 'androiddebugkey'
             keyPassword 'android'
         }
+        release {
+            storeFile file('kfszsxsc.keystore')
+            storePassword '5132468547'
+            keyAlias 'kfszsxsc'
+            keyPassword '5132468547'
+        }
     }
     buildTypes {
         debug {

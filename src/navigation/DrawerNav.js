@@ -22,8 +22,8 @@ export const DrawerNavigation = () => {
 
 const styles = StyleSheet.create({
   drawerStyle: {
-    borderBottomEndRadius: 20,
-    borderTopEndRadius: 20,
+    borderBottomEndRadius: 10,
+    borderTopEndRadius: 10,
     marginTop: 20,
     elevation: 10
   }

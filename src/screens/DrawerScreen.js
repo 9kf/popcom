@@ -71,11 +71,11 @@ export const DrawerScreen = (props) => {
                                         <Icon 
                                             name={item.iconName}
                                             type="font-awesome-5"
-                                            size={20} 
+                                            size={15} 
                                             color="#21542C" />
                                     )}
                                     label={item.label}
-                                    labelStyle={{ color:"#24562F" }}
+                                    labelStyle={{ color:"#24562F", fontSize: 12 }}
                                     onPress={item.pressFunction}
                                     style={{alignSelf:'stretch'}}
                                 />
@@ -90,11 +90,11 @@ export const DrawerScreen = (props) => {
                             <Icon 
                                 name="hand-holding-heart"
                                 type="font-awesome-5"
-                                size={20} 
+                                size={15} 
                                 color="#21542C" />
                         )}
                         label="Dispense Inventory"
-                        labelStyle={{ color:"#24562F" }}
+                        labelStyle={{ color:"#24562F", fontSize: 12 }}
                         // onPress={item.pressFunction}
                         style={{alignSelf:'stretch'}}
                     />
@@ -110,11 +110,11 @@ export const DrawerScreen = (props) => {
                                         <Icon 
                                             name={item.iconName}
                                             type="font-awesome-5"
-                                            size={20} 
+                                            size={15} 
                                             color="#21542C" />
                                     )}
                                     label={item.label}
-                                    labelStyle={{ color:"#24562F" }}
+                                    labelStyle={{ color:"#24562F", fontSize: 12 }}
                                     onPress={item.pressFunction}
                                     style={{alignSelf:'stretch'}}
                                 />
@@ -133,11 +133,11 @@ export const DrawerScreen = (props) => {
                                         <Icon 
                                             name={item.iconName}
                                             type="font-awesome-5"
-                                            size={20} 
+                                            size={15} 
                                             color="#21542C" />
                                     )}
                                     label={item.label}
-                                    labelStyle={{ color:"#24562F" }}
+                                    labelStyle={{ color:"#24562F", fontSize: 12 }}
                                     onPress={item.pressFunction}
                                     style={{alignSelf:'stretch'}}
                                 />
@@ -153,11 +153,11 @@ export const DrawerScreen = (props) => {
                         <Icon 
                             name="power-off"
                             type="font-awesome-5"
-                            size={20} 
+                            size={15} 
                             color="#21542C" />
                     )}
                     label="Logout"
-                    labelStyle={{ color:"#24562F" }}
+                    labelStyle={{ color:"#24562F", fontSize: 12 }}
                     onPress={logout}
                 />
             </View>
@@ -169,12 +169,12 @@ export const DrawerScreen = (props) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        borderTopEndRadius: 20,
-        borderBottomEndRadius: 20
+        borderTopEndRadius: 10,
+        borderBottomEndRadius: 10
     },
     userInfo: {
         flexDirection: 'row',
-        borderTopEndRadius: 20,
+        borderTopEndRadius: 10,
         padding:20,
         justifyContent:'center',
         borderBottomWidth: 2,
@@ -201,7 +201,8 @@ const styles = StyleSheet.create({
         borderTopColor: "#d3d3d3"
     },
     sectionHeader: {
-        padding: 8, 
+        paddingLeft: 8, 
+        fontSize: 12,
         color:'#C6C6C6'
     }
 

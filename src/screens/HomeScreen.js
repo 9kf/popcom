@@ -37,11 +37,11 @@ export const HomeScreen = ({navigation}) => {
         </View>
 
         <View style={numbersStyles.numbersSection}>
-            <View style={{ flexGrow: 1, alignSelf: 'stretch', paddingLeft: 40 }}>
+            <View style={{ flexGrow: 1, paddingLeft: 15 }}>
                 <Text style={numbersStyles.numbersHeader}>Total Dispense Transactions</Text>
                 <Text style={numbersStyles.numbersStats}>288</Text>
             </View>
-            <View style={{ flexGrow: 1 }}>
+            <View style={{ flexGrow: 1, paddingLeft: 40 }}>
                 <Text style={numbersStyles.numbersHeader}>Total Inventory Count</Text>
                 <Text style={numbersStyles.numbersStats}>10,582</Text>
             </View>
@@ -169,5 +169,6 @@ const numbersStyles = StyleSheet.create({
 
 const optionStyles = StyleSheet.create({
     optionsSection: {flexGrow: 1, alignSelf:'stretch', justifyContent:'space-evenly'},
-    card: { flexGrow: 0.5, alignItems:'center'}
+    card: { flexGrow: 0.5, alignItems:'center'},
+    numbersSection: { flexGrow: 1, paddingLeft: 15 }
 });
