@@ -79,6 +79,14 @@ export const AddItemScreen = ({navigation}) => {
   const [category, setCategory] = useState(CATEGORIES[0]);
   const [description, setDescription] = useState('');
 
+  const resetForm = () => {
+    setImage(null);
+    setItemName('');
+    setBarcode('');
+    setCategory(CATEGORIES[0]);
+    setDescription('');
+  };
+
   const addItem = async () => {
     const params = new URLSearchParams({
       item_sku: barcode,
@@ -103,11 +111,18 @@ export const AddItemScreen = ({navigation}) => {
     }
 
     const json = await response.json();
+    navigation.navigate('ItemMaster');
+    resetForm();
   };
 
   return (
     <View style={styles.container}>
-      <CustomHeader navigation={navigation} title={'Create Item'} type={1} />
+      <CustomHeader
+        navigation={navigation}
+        title={'Create Item'}
+        type={1}
+        fromScreen={'ItemMaster'}
+      />
       <ScrollView showsVerticalScrollIndicator={false}>
         <Gallery setImage={setImage} image={image} />
         <Card
@@ -162,7 +177,8 @@ export const AddItemScreen = ({navigation}) => {
             }}>
             <Picker
               selectedValue={category}
-              onValueChange={(value, index) => setCategory(value)}>
+              onValueChange={(value, index) => setCategory(value)}
+              mode={'dropdown'}>
               {CATEGORIES.map((item, index) => (
                 <Picker.Item key={index} value={item.name} label={item.name} />
               ))}

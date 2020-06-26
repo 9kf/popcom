@@ -26,8 +26,8 @@ const App = () => {
   return (
     <AuthContext.Provider value={authContext}>
       <View style={{flex: 1}}>
-        <DrawerNavigation />
-        {/* {user ? <DrawerNavigation /> : <LoginScreen />} */}
+        {/* <DrawerNavigation /> */}
+        {user ? <DrawerNavigation /> : <LoginScreen />}
       </View>
     </AuthContext.Provider>
   );

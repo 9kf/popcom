@@ -1,5 +1,11 @@
 export const POPCOM_URL = 'https://www.popcom.app';
 
+export const MAPBOX_API_KEY =
+  'pk.eyJ1Ijoia2Z3ZWVlIiwiYSI6ImNqeWpzcjR3YzA2NWMzYmxoNWEwd2F2a3IifQ.2-zcf41wbjsb5FelfoBxSg';
+
+export const MAPBOX_SEARCH_URL =
+  'https://api.mapbox.com/geocoding/v5/mapbox.places';
+
 export const FACILITY_TYPE = [
   {
     name: 'RHU',
@@ -8,8 +14,8 @@ export const FACILITY_TYPE = [
   },
   {
     name: 'MHC',
-    tagColor: '#FED7E5',
-    tagLabelColor: '#F288B9',
+    tagColor: '#FFF2B4',
+    tagLabelColor: '#FFD71C',
   },
   {
     name: 'CHO',

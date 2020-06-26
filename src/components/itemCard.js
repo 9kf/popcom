@@ -125,7 +125,7 @@ export const ItemCard = ({
                 style={{marginRight: 4}}
               />
               <Text style={{fontSize: 10, color: '#B3B3B3'}}>
-                Minglanilla, Cebu City
+                Facility's Address Here
               </Text>
             </View>
           ) : (

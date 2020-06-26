@@ -6,8 +6,9 @@ import {CustomHeader, ItemCard} from '../components';
 
 import {Button, Icon} from 'react-native-elements';
 
-const AddFacilityButton = () => (
+const AddFacilityButton = ({navigation}) => (
   <Button
+    onPress={() => navigation.navigate('AddFacility')}
     icon={<Icon name="plus" size={16} color="white" type="font-awesome-5" />}
     buttonStyle={{backgroundColor: '#065617', borderRadius: 20}}
   />
@@ -16,9 +17,9 @@ const AddFacilityButton = () => (
 export const FacilitiesScreen = ({navigation}) => {
   const items = [
     {
-      title: 'Trust Chocolate Condom',
+      title: 'Lutopan Rural Facility',
       count: 5,
-      tag: 'Male Condom',
+      tag: 'RHU',
       price: 2500,
       tagColor: '#D5EAFF',
       tagLabelColor: '#55AAED',
@@ -41,9 +42,9 @@ export const FacilitiesScreen = ({navigation}) => {
       ],
     },
     {
-      title: 'Durex Light Condom',
+      title: 'Argao Rural Facility',
       count: 2,
-      tag: 'Male Condom',
+      tag: 'RHU',
       price: 2600,
       tagColor: '#D5EAFF',
       tagLabelColor: '#55AAED',
@@ -66,9 +67,9 @@ export const FacilitiesScreen = ({navigation}) => {
       ],
     },
     {
-      title: 'Mango Female Condom',
+      title: 'Talisay Municipal Facility',
       count: 0,
-      tag: 'RHU',
+      tag: 'MHC',
       price: 1600,
       tagColor: '#FED7E5',
       tagLabelColor: '#F288B9',
@@ -91,9 +92,9 @@ export const FacilitiesScreen = ({navigation}) => {
       ],
     },
     {
-      title: 'Mercilon - 21 Pills',
+      title: 'Panglao Municipal Facility',
       count: 6,
-      tag: 'Pills',
+      tag: 'CHO',
       price: 780,
       tagColor: '#CCFAED',
       tagLabelColor: '#39CAAD',
@@ -116,9 +117,9 @@ export const FacilitiesScreen = ({navigation}) => {
       ],
     },
     {
-      title: 'Marvelon - 28 Pills',
+      title: 'Toledo Municipal Facility',
       count: 6,
-      tag: 'Pills',
+      tag: 'CHO',
       price: 780,
       tagColor: '#CCFAED',
       tagLabelColor: '#39CAAD',
@@ -141,9 +142,9 @@ export const FacilitiesScreen = ({navigation}) => {
       ],
     },
     {
-      title: 'D - 35 Pills',
+      title: 'Naga Rural Facility',
       count: 6,
-      tag: 'Pills',
+      tag: 'CHO',
       price: 780,
       tagColor: '#CCFAED',
       tagLabelColor: '#39CAAD',
@@ -172,7 +173,7 @@ export const FacilitiesScreen = ({navigation}) => {
       <CustomHeader
         title={'Facility'}
         navigation={navigation}
-        RightComponent={<AddFacilityButton />}
+        RightComponent={<AddFacilityButton navigation={navigation} />}
       />
       <ScrollView showsVerticalScrollIndicator={false}>
         {items.map((item, index) => {

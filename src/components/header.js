@@ -8,7 +8,13 @@ import {Icon, Button} from 'react-native-elements';
  * 2 = BACK
  */
 
-export const CustomHeader = ({title, navigation, RightComponent, type}) => (
+export const CustomHeader = ({
+  title,
+  navigation,
+  RightComponent,
+  type,
+  fromScreen,
+}) => (
   <View style={styles.container}>
     <View style={styles.barStyle}>
       {type === 1 ? (
@@ -16,7 +22,7 @@ export const CustomHeader = ({title, navigation, RightComponent, type}) => (
           name="chevron-left"
           type="font-awesome-5"
           color="#333"
-          onPress={() => navigation.navigate('ItemMaster')}
+          onPress={() => navigation.navigate(fromScreen)}
         />
       ) : (
         <Icon
