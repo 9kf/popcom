@@ -6,7 +6,7 @@ import {CustomHeader, ItemCard} from '../components';
 
 import {Button, Icon} from 'react-native-elements';
 
-const CheckoutCount = () => (
+const AddFacilityButton = () => (
   <Button
     icon={<Icon name="plus" size={16} color="white" type="font-awesome-5" />}
     buttonStyle={{backgroundColor: '#065617', borderRadius: 20}}
@@ -170,9 +170,9 @@ export const FacilitiesScreen = ({navigation}) => {
   return (
     <View style={styles.container}>
       <CustomHeader
-        title={'Dispense'}
+        title={'Facility'}
         navigation={navigation}
-        LeftComponent={<CheckoutCount />}
+        RightComponent={<AddFacilityButton />}
       />
       <ScrollView showsVerticalScrollIndicator={false}>
         {items.map((item, index) => {

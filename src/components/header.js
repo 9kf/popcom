@@ -2,20 +2,35 @@ import React from 'react';
 import {StyleSheet, View, Text} from 'react-native';
 import {Icon, Button} from 'react-native-elements';
 
-export const CustomHeader = ({title, navigation, LeftComponent}) => (
+/**
+ * LEFTCOMPONENT TYPE
+ * 1 = HAMBURGER
+ * 2 = BACK
+ */
+
+export const CustomHeader = ({title, navigation, RightComponent, type}) => (
   <View style={styles.container}>
     <View style={styles.barStyle}>
-      <Icon
-        name="bars"
-        type="font-awesome"
-        color="#333"
-        onPress={() => navigation.openDrawer()}
-      />
+      {type === 1 ? (
+        <Icon
+          name="chevron-left"
+          type="font-awesome-5"
+          color="#333"
+          onPress={() => navigation.navigate('ItemMaster')}
+        />
+      ) : (
+        <Icon
+          name="bars"
+          type="font-awesome"
+          color="#333"
+          onPress={() => navigation.openDrawer()}
+        />
+      )}
     </View>
 
     <Text style={styles.titleStyle}>{title}</Text>
 
-    {LeftComponent && LeftComponent}
+    {RightComponent && RightComponent}
   </View>
 );
 

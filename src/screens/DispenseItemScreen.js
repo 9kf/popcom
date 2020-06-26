@@ -179,7 +179,7 @@ export const DispenseItemScreen = ({navigation}) => {
       <CustomHeader
         title={'Dispense'}
         navigation={navigation}
-        LeftComponent={<CheckoutCount />}
+        RightComponent={<CheckoutCount />}
       />
       <ScrollView showsVerticalScrollIndicator={false}>
         {items.map((item, index) => {

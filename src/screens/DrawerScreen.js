@@ -19,13 +19,18 @@ export const DrawerScreen = props => {
     },
     {
       iconName: 'box',
-      pressFunction: () => console.log('to be implemented'),
+      pressFunction: () => props.navigation.navigate('ItemMaster'),
       label: 'Item Master',
     },
     {
-      iconName: 'store',
+      iconName: 'cart-plus',
       pressFunction: () => props.navigation.navigate('Inventory'),
       label: 'Inventory',
+    },
+    {
+      iconName: 'store',
+      pressFunction: () => props.navigation.navigate('Facilities'),
+      label: 'Facility',
     },
     {
       iconName: 'hand-holding-heart',
@@ -198,6 +203,8 @@ const styles = StyleSheet.create({
   },
   logoutStyle: {
     alignSelf: 'stretch',
+    borderTopWidth: 2,
+    borderColor: '#d3d3d3',
   },
   sectionHeader: {
     paddingLeft: 8,

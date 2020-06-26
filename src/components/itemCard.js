@@ -152,20 +152,22 @@ export const ItemCard = ({
                 </Text>
               </View>
 
-              <View
-                style={{
-                  ...styles.tagStyle,
-                  backgroundColor: '#D9D9D9',
-                }}>
-                <Icon
-                  name="shopping-cart"
-                  type="font-awesome-5"
-                  color="gray"
-                  size={8}
-                  style={{marginRight: 4}}
-                />
-                <Text style={styles.tagText}>{`${price}ea`}</Text>
-              </View>
+              {type != 5 && (
+                <View
+                  style={{
+                    ...styles.tagStyle,
+                    backgroundColor: '#D9D9D9',
+                  }}>
+                  <Icon
+                    name="shopping-cart"
+                    type="font-awesome-5"
+                    color="gray"
+                    size={8}
+                    style={{marginRight: 4}}
+                  />
+                  <Text style={styles.tagText}>{`${price} ea`}</Text>
+                </View>
+              )}
             </View>
           )}
         </View>
@@ -204,6 +206,7 @@ export const ItemCard = ({
               name={'chevron-right'}
               type="font-awesome-5"
               color="#D9D9D9"
+              size={18}
             />
           </View>
         ) : (
@@ -213,6 +216,7 @@ export const ItemCard = ({
               type="font-awesome-5"
               color="#D9D9D9"
               onPress={() => setIsCollapsed(!isCollapsed)}
+              size={18}
             />
           </View>
         )}
