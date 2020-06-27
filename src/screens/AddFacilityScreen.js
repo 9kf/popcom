@@ -6,7 +6,7 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Image,
+  AsyncStorage,
   TextInput,
   Picker,
 } from 'react-native';
@@ -75,40 +75,43 @@ export const AddFacilityScreen = ({navigation}) => {
   const [role, setRole] = useState('');
 
   const addItem = async () => {
-    const requestBody = new URLSearchParams({
-      first_name: firstName,
-      last_name: lastName,
-      contact_number: contactNumber,
-      email: email,
-      password: password,
-      user_status: '1',
-      facility_name: facilityName,
-      address: selectedAddress.place_name,
-      region: selectedAddress.context[2].text,
-      province: selectedAddress.context[1].text,
-      longitude: selectedAddress.geometry.coordinates[0].toString(),
-      latitude: selectedAddress.geometry.coordinates[1].toString(),
-      api_token: api_token,
+    await AsyncStorage.getItem('user_data', (err, result) => {
+      console.log(result);
     });
+    // const requestBody = new URLSearchParams({
+    //   first_name: firstName,
+    //   last_name: lastName,
+    //   contact_number: contactNumber,
+    //   email: email,
+    //   password: password,
+    //   user_status: '1',
+    //   facility_name: facilityName,
+    //   address: selectedAddress.place_name,
+    //   region: '7',
+    //   province: selectedAddress.context[1].text,
+    //   longitude: selectedAddress.geometry.coordinates[0].toString(),
+    //   latitude: selectedAddress.geometry.coordinates[1].toString(),
+    //   api_token: api_token,
+    // });
 
-    console.log(requestBody);
+    // console.log(requestBody);
 
-    const endpoint = `${POPCOM_URL}/api/create-facility?${requestBody.toString()}`;
-    const response = await fetch(endpoint, {
-      headers: {
-        accept: 'application/json',
-      },
-      method: 'post',
-    });
+    // const endpoint = `${POPCOM_URL}/api/create-facility?${requestBody.toString()}`;
+    // const response = await fetch(endpoint, {
+    //   headers: {
+    //     accept: 'application/json',
+    //   },
+    //   method: 'post',
+    // });
 
-    if (!response.ok) {
-      alert('failed');
-      console.log(response);
-      return;
-    }
+    // if (!response.ok) {
+    //   alert('failed');
+    //   console.log(response);
+    //   return;
+    // }
 
-    const json = await response.json();
-    console.log(json);
+    // const json = await response.json();
+    // console.log(json);
   };
 
   const selectAddress = addressObject => {
@@ -217,6 +220,7 @@ export const AddFacilityScreen = ({navigation}) => {
               borderColor: '#B7B7B7',
             }}>
             <Picker
+              style={{height: 37}}
               selectedValue={facilityType}
               onValueChange={(value, index) => setFacilityType(value)}
               mode={'dropdown'}>

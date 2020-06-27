@@ -176,6 +176,7 @@ export const AddItemScreen = ({navigation}) => {
               borderColor: '#B7B7B7',
             }}>
             <Picker
+              style={{height: 37}}
               selectedValue={category}
               onValueChange={(value, index) => setCategory(value)}
               mode={'dropdown'}>
@@ -186,7 +187,7 @@ export const AddItemScreen = ({navigation}) => {
           </View>
           <TextInput
             multiline={true}
-            numberOfLines={3}
+            numberOfLines={5}
             placeholder="Description"
             value={description}
             onChangeText={newValue => setDescription(newValue)}
