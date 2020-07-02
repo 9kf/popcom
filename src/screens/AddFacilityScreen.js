@@ -75,9 +75,6 @@ export const AddFacilityScreen = ({navigation}) => {
   const [role, setRole] = useState('');
 
   const addItem = async () => {
-    await AsyncStorage.getItem('user_data', (err, result) => {
-      console.log(result);
-    });
     // const requestBody = new URLSearchParams({
     //   first_name: firstName,
     //   last_name: lastName,
@@ -93,9 +90,7 @@ export const AddFacilityScreen = ({navigation}) => {
     //   latitude: selectedAddress.geometry.coordinates[1].toString(),
     //   api_token: api_token,
     // });
-
     // console.log(requestBody);
-
     // const endpoint = `${POPCOM_URL}/api/create-facility?${requestBody.toString()}`;
     // const response = await fetch(endpoint, {
     //   headers: {
@@ -103,13 +98,11 @@ export const AddFacilityScreen = ({navigation}) => {
     //   },
     //   method: 'post',
     // });
-
     // if (!response.ok) {
     //   alert('failed');
     //   console.log(response);
     //   return;
     // }
-
     // const json = await response.json();
     // console.log(json);
   };
@@ -229,31 +222,32 @@ export const AddFacilityScreen = ({navigation}) => {
               ))}
             </Picker>
           </View>
-          <View
-            style={{
-              flexDirection: 'row',
-              borderWidth: 1,
-              borderRadius: 4,
-              marginBottom: 8,
-              borderColor: '#B7B7B7',
-              alignItems: 'center',
-            }}>
-            <TextInput
-              style={{flexGrow: 1, color: 'black'}}
-              placeholder="Facility Location"
-              value={selectedAddress && selectedAddress.place_name}
-              editable={false}
-            />
-            <View style={{marginRight: 12}}>
-              <Icon
-                name="map-marked"
-                size={16}
-                color="black"
-                type="font-awesome-5"
-                onPress={() => setIsSuggestionBoxOpen(true)}
+          <TouchableOpacity onPress={() => setIsSuggestionBoxOpen(true)}>
+            <View
+              style={{
+                flexDirection: 'row',
+                borderWidth: 1,
+                borderRadius: 4,
+                marginBottom: 8,
+                borderColor: '#B7B7B7',
+                alignItems: 'center',
+              }}>
+              <TextInput
+                style={{flexGrow: 1, color: 'black', paddingVertical: 4}}
+                placeholder="Facility Location"
+                value={selectedAddress && selectedAddress.place_name}
+                editable={false}
               />
+              <View style={{marginRight: 12}}>
+                <Icon
+                  name="map-marked"
+                  size={16}
+                  color="#C32A29"
+                  type="font-awesome-5"
+                />
+              </View>
             </View>
-          </View>
+          </TouchableOpacity>
         </Card>
 
         <Card

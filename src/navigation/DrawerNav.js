@@ -39,7 +39,7 @@ const styles = StyleSheet.create({
   drawerStyle: {
     borderBottomEndRadius: 10,
     borderTopEndRadius: 10,
-    marginTop: 20,
+    marginTop: 10,
     elevation: 10,
   },
 });

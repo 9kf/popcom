@@ -1,0 +1,36 @@
+import React, {useState, useEffect} from 'react';
+
+export const useFetch = () => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [data, setData] = useState(null);
+
+  const setDefaults = () => {
+    setError(null);
+    setData(null);
+  };
+
+  const fetchData = async (url, options) => {
+    setIsLoading(true);
+    setDefaults();
+    try {
+      const res = await fetch(url, options);
+
+      if (!res.ok) {
+        alert('Incorrect username or password');
+        setError({message: 'Incorrect username or password'});
+        setIsLoading(false);
+        return;
+      }
+
+      const json = await res.json();
+      setData(json);
+      setIsLoading(false);
+    } catch (e) {
+      setError(e);
+      setIsLoading(false);
+    }
+  };
+
+  return {isLoading, error, data, fetchData};
+};

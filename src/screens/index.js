@@ -7,3 +7,4 @@ export * from './DispenseItemScreen';
 export * from './FacilitiesScreen';
 export * from './AddFacilityScreen';
 export * from './AddItemScreen';
+export * from './SplashScreen';

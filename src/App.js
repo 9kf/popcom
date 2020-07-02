@@ -4,10 +4,11 @@ import {View, AsyncStorage} from 'react-native';
 import {AuthContext} from './context';
 
 import {DrawerNavigation} from './navigation';
-import {LoginScreen, InventoryScreen} from './screens';
+import {LoginScreen, SplashScreen} from './screens';
 
 const App = () => {
   const [user, setUser] = useState(null);
+  const [isRetrieving, setIsRetrieving] = useState(true);
 
   const login = userDetails => {
     try {
@@ -34,9 +35,13 @@ const App = () => {
   const retrieveUserData = async () => {
     try {
       await AsyncStorage.getItem('user_data', (err, result) => {
-        if (result) login(JSON.parse(result));
+        if (result) {
+          setUser(JSON.parse(result));
+          setIsRetrieving(false);
+        }
       });
     } catch (e) {
+      setIsRetrieving(false);
       console.log(e);
     }
   };
@@ -47,10 +52,14 @@ const App = () => {
 
   return (
     <AuthContext.Provider value={authContext}>
-      <View style={{flex: 1}}>
-        {/* <DrawerNavigation /> */}
-        {user ? <DrawerNavigation /> : <LoginScreen />}
-      </View>
+      {isRetrieving ? (
+        <SplashScreen />
+      ) : (
+        <View style={{flex: 1}}>
+          {/* <DrawerNavigation /> */}
+          {user ? <DrawerNavigation /> : <LoginScreen />}
+        </View>
+      )}
     </AuthContext.Provider>
   );
 };

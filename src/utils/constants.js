@@ -86,3 +86,7 @@ export const CATEGORIES = [
     tagLabelColor: '#39CAAD',
   },
 ];
+
+export const APP_THEME = {
+  primaryColor: '#043D10',
+};

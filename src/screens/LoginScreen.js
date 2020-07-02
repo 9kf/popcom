@@ -1,51 +1,50 @@
 import React, {useContext, useState, useEffect} from 'react';
 
-import {
-  View,
-  TextInput,
-  Image,
-  Text,
-  ScrollView,
-  StyleSheet,
-} from 'react-native';
+import {View, Image, Text, ScrollView, StyleSheet} from 'react-native';
+
 import {Button} from 'react-native-elements';
 
 import {AuthContext} from '../context';
 
+import {CustomTextInput} from '../components';
+
+import {APP_THEME, POPCOM_URL} from '../utils/constants';
+
+import {useFetch} from '../hooks';
+
 const logo = require('../../images/logo/popcom-logo.png');
 const title = require('../../images/title/title.png');
-const popcomURL = 'https://www.popcom.app';
 
 export const LoginScreen = () => {
   const {login} = useContext(AuthContext);
 
   const [userName, setUserName] = useState('');
   const [password, setPassword] = useState('');
+  const {data, isLoading, fetchData} = useFetch();
 
   const resetForm = () => {
     setUserName('');
     setPassword('');
   };
 
-  const fetchUser = async ev => {
+  const handleLogin = async ev => {
     const endpoint =
-      popcomURL + `/api/login?email=${userName}&password=${password}`;
-    const response = await fetch(endpoint, {
+      POPCOM_URL + `/api/login?email=${userName}&password=${password}`;
+    const options = {
       headers: {
         accept: 'application/json',
       },
       method: 'post',
-    });
-
-    if (!response.ok) {
-      alert('Incorrect username or password');
-      return;
-    }
-
-    const json = await response.json();
-    login(json);
-    resetForm();
+    };
+    fetchData(endpoint, options);
   };
+
+  useEffect(() => {
+    if (data) {
+      login(data);
+      resetForm();
+    }
+  }, [data]);
 
   return (
     <View style={styles.container}>
@@ -57,20 +56,30 @@ export const LoginScreen = () => {
         <Image source={title} />
 
         <View style={styles.form}>
-          <TextInput
-            placeholder={'Username / Email'}
-            onChangeText={newText => setUserName(newText)}
+          <CustomTextInput
+            textInputProps={{
+              value: userName,
+              placeholder: 'Username / Email',
+              onChangeText: newText => setUserName(newText),
+            }}
+            focusedBorderColor={APP_THEME.primaryColor}
           />
-          <TextInput
-            placeholder={'Password'}
-            secureTextEntry={true}
-            onChangeText={newText => setPassword(newText)}
+          <CustomTextInput
+            textInputProps={{
+              value: password,
+              placeholder: 'Password',
+              secureTextEntry: true,
+              onChangeText: newText => setPassword(newText),
+            }}
+            focusedBorderColor={APP_THEME.primaryColor}
           />
           <Button
             title={'Login'}
             buttonStyle={styles.loginButton}
+            loading={isLoading}
+            loadingStyle={styles.disabledLoginButton}
             type={'solid'}
-            onPress={fetchUser}
+            onPress={handleLogin}
           />
         </View>
 
@@ -104,9 +113,13 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
   },
   loginButton: {
-    backgroundColor: '#043D10',
+    backgroundColor: APP_THEME.primaryColor,
     borderRadius: 8,
-    marginTop: 24,
+    marginTop: 12,
+  },
+  disabledLoginButton: {
+    backgroundColor: APP_THEME.primaryColor,
+    borderRadius: 8,
   },
   footer: {
     flex: 1,

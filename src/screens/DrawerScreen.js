@@ -83,7 +83,7 @@ export const DrawerScreen = props => {
                   />
                 )}
                 label={item.label}
-                labelStyle={{color: '#24562F', fontSize: 12}}
+                labelStyle={styles.drawerItemLabel}
                 onPress={item.pressFunction}
                 style={{alignSelf: 'stretch'}}
               />
@@ -102,7 +102,7 @@ export const DrawerScreen = props => {
               />
             )}
             label="Dispense Inventory"
-            labelStyle={{color: '#24562F', fontSize: 12}}
+            labelStyle={styles.drawerItemLabel}
             onPress={() => props.navigation.navigate('Dispense')}
             style={{alignSelf: 'stretch'}}
           />
@@ -122,7 +122,7 @@ export const DrawerScreen = props => {
                   />
                 )}
                 label={item.label}
-                labelStyle={{color: '#24562F', fontSize: 12}}
+                labelStyle={styles.drawerItemLabel}
                 onPress={item.pressFunction}
                 style={{alignSelf: 'stretch'}}
               />
@@ -144,7 +144,7 @@ export const DrawerScreen = props => {
                   />
                 )}
                 label={item.label}
-                labelStyle={{color: '#24562F', fontSize: 12}}
+                labelStyle={styles.drawerItemLabel}
                 onPress={item.pressFunction}
                 style={{alignSelf: 'stretch'}}
               />
@@ -164,7 +164,7 @@ export const DrawerScreen = props => {
             />
           )}
           label="Logout"
-          labelStyle={{color: '#24562F', fontSize: 12}}
+          labelStyle={styles.drawerItemLabel}
           onPress={logout}
         />
       </View>
@@ -209,5 +209,9 @@ const styles = StyleSheet.create({
   sectionHeader: {
     paddingLeft: 8,
     color: '#C6C6C6',
+  },
+  drawerItemLabel: {
+    color: '#24562F',
+    fontSize: 13,
   },
 });
