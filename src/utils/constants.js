@@ -89,4 +89,20 @@ export const CATEGORIES = [
 
 export const APP_THEME = {
   primaryColor: '#043D10',
+  defaultOverlayStyle: {
+    flex: 1,
+    margin: 32,
+    alignSelf: 'stretch',
+    borderRadius: 8,
+  },
+  inputContainerStyle: {
+    borderWidth: 1,
+    borderRadius: 4,
+    marginBottom: 8,
+    borderColor: '#B7B7B7',
+  },
+  defaultInputStyle: {
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+  },
 };

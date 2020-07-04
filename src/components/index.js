@@ -3,3 +3,6 @@ export * from './header';
 export * from './itemCard';
 export * from './counter';
 export * from './customTextInput';
+export * from './errorHandlingField';
+export * from './imagePicker';
+export * from './placeFinder';

@@ -1,8 +1,8 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState} from 'react';
 
 export const useFetch = () => {
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [errorMessage, setError] = useState(null);
   const [data, setData] = useState(null);
 
   const setDefaults = () => {
@@ -10,14 +10,14 @@ export const useFetch = () => {
     setData(null);
   };
 
-  const fetchData = async (url, options) => {
+  const fetchData = async (url, options, errorCallback) => {
     setIsLoading(true);
     setDefaults();
     try {
       const res = await fetch(url, options);
 
       if (!res.ok) {
-        alert('Incorrect username or password');
+        errorCallback();
         setError({message: 'Incorrect username or password'});
         setIsLoading(false);
         return;
@@ -32,5 +32,5 @@ export const useFetch = () => {
     }
   };
 
-  return {isLoading, error, data, fetchData};
+  return {isLoading, errorMessage, data, fetchData};
 };

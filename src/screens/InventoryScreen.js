@@ -160,7 +160,10 @@ export const InventoryScreen = ({navigation}) => {
 
   return (
     <View style={styles.container}>
-      <CustomHeader title={'Inventory'} navigation={navigation} />
+      <CustomHeader
+        title={'Inventory'}
+        LeftComponentFunc={() => navigation.openDrawer()}
+      />
       <ScrollView showsVerticalScrollIndicator={false}>
         {items.map((item, index) => {
           return (

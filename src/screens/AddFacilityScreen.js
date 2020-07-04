@@ -1,4 +1,5 @@
 import React, {useState, useContext, useEffect} from 'react';
+import * as R from 'ramda';
 
 import {
   View,
@@ -10,70 +11,69 @@ import {
   Picker,
 } from 'react-native';
 
-import {CustomHeader} from '../components';
+import {
+  CustomHeader,
+  ErrorHandlingField,
+  ImagePickerComponent,
+  PlaceFinder,
+} from '../components';
 
-import {Button, Icon, Card, Overlay} from 'react-native-elements';
+import {Button, Icon, Card} from 'react-native-elements';
 
 import ImagePicker from 'react-native-image-picker';
 
 import {AuthContext} from '../context';
 
-import {
-  FACILITY_TYPE,
-  POPCOM_URL,
-  MAPBOX_API_KEY,
-  MAPBOX_SEARCH_URL,
-} from '../utils/constants';
+import {useFetch, useForm} from '../hooks';
 
-import {debounce} from '../utils/helper';
+import {FACILITY_TYPE, POPCOM_URL, APP_THEME} from '../utils/constants';
 
-const FIELD_KEYS = {
-  firstName: 'first_name',
-  lastName: 'last_name',
-  contactNumber: 'contactN',
-};
-
-const SuggestionItem = props => {
-  return (
-    <TouchableOpacity onPress={() => props.itemOnpress(props.item)}>
-      <View
-        style={{flexDirection: 'row', alignItems: 'center', marginBottom: 12}}>
-        <Icon
-          name="map-marker-alt"
-          size={20}
-          color="#C32A29"
-          type="font-awesome-5"
-          iconStyle={{marginRight: 12}}
-          onPress={() => setIsSuggestionBoxOpen(true)}
-        />
-
-        <Text style={{fontSize: 16, marginRight: 12}}>
-          {props.item.place_name}
-        </Text>
-      </View>
-    </TouchableOpacity>
-  );
+const FORM_KEYS = {
+  FIRST_NAME: 'first_name',
+  LAST_NAME: 'last_name',
+  CONTACT_NUMBER: 'contact_number',
+  EMAIL: 'email',
+  PASSWORD: 'password',
+  USER_STATUS: 'user_status',
+  FACILITY_NAME: 'facility_name',
+  ADDRESS: 'address',
+  REGION: 'region',
+  PROVINCE: 'province',
+  LONGITUDE: 'longitude',
+  LATITUDE: 'latitude',
+  FACILITY_TYPE: 'facility_type',
+  FACILITY_STATUS: 'facility_status',
+  API_TOKEN: 'api_token',
 };
 
 export const AddFacilityScreen = ({navigation}) => {
   const {getUser} = useContext(AuthContext);
   const {api_token} = getUser();
 
-  const [facilityName, setFacilityName] = useState('');
-  const [facilityType, setFacilityType] = useState(FACILITY_TYPE[0].name);
-  const [isSuggestionBoxOpen, setIsSuggestionBoxOpen] = useState(false);
-  const [address, setAddress] = useState('');
-  const [selectedAddress, setSelectedAddress] = useState(null);
-  const [suggestions, setSuggestions] = useState([]);
+  const validate = formValues => {
+    let errors = {};
 
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastname] = useState('');
-  const [contactNumber, setContactNumber] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [role, setRole] = useState('');
+    const newValues = R.assoc(
+      FORM_KEYS.ADDRESS,
+      formValues[FORM_KEYS.ADDRESS]?.place_name,
+      formValues,
+    );
 
-  const addItem = async () => {
+    const requiredFields = Object.keys(FORM_KEYS).filter(
+      key => key != 'LONGITUDE' && key != 'LATITUDE',
+    );
+
+    //required fields must not be empty
+    requiredFields.forEach(key => {
+      if (!newValues[FORM_KEYS[key]] || newValues[FORM_KEYS[key]].trim() === '')
+        errors[FORM_KEYS[key]] = `${FORM_KEYS[key]} must not be empty`;
+    });
+
+    return errors;
+  };
+
+  const addFacility = async formValues => {
+    console.log(formValues);
     // const requestBody = new URLSearchParams({
     //   first_name: firstName,
     //   last_name: lastName,
@@ -106,70 +106,35 @@ export const AddFacilityScreen = ({navigation}) => {
     // console.log(json);
   };
 
-  const selectAddress = addressObject => {
-    setSelectedAddress(addressObject);
-    setIsSuggestionBoxOpen(false);
+  const initialState = {
+    [FORM_KEYS.FACILITY_TYPE]: FACILITY_TYPE[0].name,
+    [FORM_KEYS.API_TOKEN]: api_token,
+    [FORM_KEYS.USER_STATUS]: '1',
+    [FORM_KEYS.FACILITY_STATUS]: '1',
   };
-
-  const getPlace = async () => {
-    const endpoint = `${MAPBOX_SEARCH_URL}/${address}.json?country=PH&limit=10&types=locality&access_token=${MAPBOX_API_KEY}`;
-    const response = await fetch(endpoint);
-    const json = await response.json();
-    setSuggestions(json.features);
-  };
-
-  useEffect(() => {
-    if (address.length != 0) {
-      getPlace();
-    }
-  }, [address]);
+  const {
+    onFieldValueChange,
+    onFormSubmit,
+    resetForm,
+    errors,
+    formValues,
+  } = useForm(initialState, addFacility, validate);
 
   return (
     <View style={styles.container}>
-      <Overlay
-        overlayStyle={{
-          flex: 1,
-          margin: 32,
-          alignSelf: 'stretch',
-          borderRadius: 8,
-        }}
-        isVisible={isSuggestionBoxOpen}
-        onBackdropPress={() => setIsSuggestionBoxOpen(false)}>
-        <TextInput
-          value={address}
-          onChangeText={newValue => debounce(setAddress(newValue), 1000)}
-          placeholder={'Search a place'}
-          style={{
-            borderBottomWidth: 1,
-            borderBottomColor: 'gray',
-            marginBottom: 12,
-          }}
-        />
-        <ScrollView>
-          {suggestions.map((item, index) => {
-            return (
-              <SuggestionItem
-                key={index}
-                item={item}
-                itemOnpress={selectAddress}
-              />
-            );
-          })}
-        </ScrollView>
-      </Overlay>
-
       <CustomHeader
-        navigation={navigation}
+        LeftComponentFunc={() => {
+          resetForm();
+          navigation.navigate('Facilities');
+        }}
         title={'Add Facility'}
         type={1}
-        fromScreen="Facilities"
       />
       <ScrollView showsVerticalScrollIndicator={false}>
-        <Card
-          containerStyle={{
-            borderRadius: 8,
+        <View
+          style={{
             marginHorizontal: 20,
-            elevation: 3,
+            marginTop: 20,
           }}>
           <View style={{flexDirection: 'row', marginBottom: 12}}>
             <Icon
@@ -182,78 +147,47 @@ export const AddFacilityScreen = ({navigation}) => {
               Facility Information
             </Text>
           </View>
-          <TextInput
-            placeholder="Facility Name"
-            value={facilityName}
-            onChangeText={newValue => setFacilityName(newValue)}
-            style={{
-              borderWidth: 1,
-              borderRadius: 4,
-              paddingVertical: 4,
-              paddingHorizontal: 8,
-              marginBottom: 8,
-              borderColor: '#B7B7B7',
-            }}
-          />
-          <Text
-            style={{
-              color: 'gray',
-              fontSize: 10,
-              marginBottom: 4,
-              marginLeft: 4,
-            }}>
-            Facility Type
-          </Text>
-          <View
-            style={{
-              borderWidth: 1,
-              borderRadius: 4,
-              marginBottom: 8,
-              borderColor: '#B7B7B7',
-            }}>
+          <ErrorHandlingField
+            title={'Facility Name'}
+            style={APP_THEME.inputContainerStyle}
+            errorMessage={errors[FORM_KEYS.FACILITY_NAME]}>
+            <TextInput
+              value={formValues[FORM_KEYS.FACILITY_NAME]}
+              onChangeText={newValue =>
+                onFieldValueChange(FORM_KEYS.FACILITY_NAME, newValue)
+              }
+              style={APP_THEME.defaultInputStyle}
+            />
+          </ErrorHandlingField>
+          <ErrorHandlingField
+            title={'Facility Type'}
+            errorMessage={errors[FORM_KEYS.FACILITY_TYPE]}
+            style={APP_THEME.inputContainerStyle}>
             <Picker
               style={{height: 37}}
-              selectedValue={facilityType}
-              onValueChange={(value, index) => setFacilityType(value)}
+              selectedValue={formValues[FORM_KEYS.FACILITY_TYPE]}
+              onValueChange={(value, index) =>
+                onFieldValueChange(FORM_KEYS.FACILITY_TYPE, value)
+              }
               mode={'dropdown'}>
               {FACILITY_TYPE.map((item, index) => (
                 <Picker.Item key={index} value={item.name} label={item.name} />
               ))}
             </Picker>
-          </View>
-          <TouchableOpacity onPress={() => setIsSuggestionBoxOpen(true)}>
-            <View
-              style={{
-                flexDirection: 'row',
-                borderWidth: 1,
-                borderRadius: 4,
-                marginBottom: 8,
-                borderColor: '#B7B7B7',
-                alignItems: 'center',
-              }}>
-              <TextInput
-                style={{flexGrow: 1, color: 'black', paddingVertical: 4}}
-                placeholder="Facility Location"
-                value={selectedAddress && selectedAddress.place_name}
-                editable={false}
-              />
-              <View style={{marginRight: 12}}>
-                <Icon
-                  name="map-marked"
-                  size={16}
-                  color="#C32A29"
-                  type="font-awesome-5"
-                />
-              </View>
-            </View>
-          </TouchableOpacity>
-        </Card>
+          </ErrorHandlingField>
+          <PlaceFinder
+            title={'Facility Location'}
+            setValue={onFieldValueChange(FORM_KEYS.ADDRESS)}
+            value={formValues[FORM_KEYS.ADDRESS]}
+            errorBorderColor={'red'}
+            errorMessage={errors[FORM_KEYS.ADDRESS]}
+          />
+        </View>
 
-        <Card
-          containerStyle={{
-            borderRadius: 8,
+        <View
+          style={{
             marginHorizontal: 20,
-            elevation: 3,
+            marginTop: 20,
           }}>
           <View style={{flexDirection: 'row', marginBottom: 12}}>
             <Icon
@@ -266,87 +200,71 @@ export const AddFacilityScreen = ({navigation}) => {
               Facility User
             </Text>
           </View>
-          <TextInput
-            placeholder="First Name"
-            value={firstName}
-            onChangeText={newValue => setFirstName(newValue)}
-            style={{
-              borderWidth: 1,
-              borderRadius: 8,
-              paddingVertical: 4,
-              paddingHorizontal: 8,
-              marginBottom: 8,
-              borderColor: '#B7B7B7',
-            }}
-          />
-          <TextInput
-            placeholder="Last Name"
-            value={lastName}
-            onChangeText={newValue => setLastname(newValue)}
-            style={{
-              borderWidth: 1,
-              borderRadius: 8,
-              paddingVertical: 4,
-              paddingHorizontal: 8,
-              marginBottom: 8,
-              borderColor: '#B7B7B7',
-            }}
-          />
-          <TextInput
-            placeholder="Email"
-            value={email}
-            onChangeText={newValue => setEmail(newValue)}
-            style={{
-              borderWidth: 1,
-              borderRadius: 8,
-              paddingVertical: 4,
-              paddingHorizontal: 8,
-              marginBottom: 8,
-              borderColor: '#B7B7B7',
-            }}
-          />
-          <TextInput
-            placeholder="Password"
-            secureTextEntry={true}
-            value={password}
-            onChangeText={newValue => setPassword(newValue)}
-            style={{
-              borderWidth: 1,
-              borderRadius: 8,
-              paddingVertical: 4,
-              paddingHorizontal: 8,
-              marginBottom: 8,
-              borderColor: '#B7B7B7',
-            }}
-          />
-          <TextInput
-            placeholder="Role / Rank"
-            value={role}
-            onChangeText={newValue => setRole(newValue)}
-            style={{
-              borderWidth: 1,
-              borderRadius: 8,
-              paddingVertical: 4,
-              paddingHorizontal: 8,
-              marginBottom: 8,
-              borderColor: '#B7B7B7',
-            }}
-          />
-          <TextInput
-            placeholder="Contact Number"
-            keyboardType={'numeric'}
-            value={contactNumber}
-            onChangeText={newValue => setContactNumber(newValue)}
-            style={{
-              borderWidth: 1,
-              borderRadius: 8,
-              paddingVertical: 4,
-              paddingHorizontal: 8,
-              marginBottom: 8,
-              borderColor: '#B7B7B7',
-            }}
-          />
-        </Card>
+          <ErrorHandlingField
+            style={APP_THEME.inputContainerStyle}
+            title={'First Name'}
+            errorMessage={errors[FORM_KEYS.FIRST_NAME]}>
+            <TextInput
+              value={formValues[FORM_KEYS.FIRST_NAME]}
+              onChangeText={newValue =>
+                onFieldValueChange(FORM_KEYS.FIRST_NAME, newValue)
+              }
+              style={APP_THEME.defaultInputStyle}
+            />
+          </ErrorHandlingField>
+
+          <ErrorHandlingField
+            style={APP_THEME.inputContainerStyle}
+            title={'Last Name'}
+            errorMessage={errors[FORM_KEYS.LAST_NAME]}>
+            <TextInput
+              value={formValues[FORM_KEYS.LAST_NAME]}
+              onChangeText={newValue =>
+                onFieldValueChange(FORM_KEYS.LAST_NAME, newValue)
+              }
+              style={APP_THEME.defaultInputStyle}
+            />
+          </ErrorHandlingField>
+
+          <ErrorHandlingField
+            style={APP_THEME.inputContainerStyle}
+            title={'Email'}
+            errorMessage={errors[FORM_KEYS.EMAIL]}>
+            <TextInput
+              value={formValues[FORM_KEYS.EMAIL]}
+              onChangeText={newValue =>
+                onFieldValueChange(FORM_KEYS.EMAIL, newValue)
+              }
+              style={APP_THEME.defaultInputStyle}
+            />
+          </ErrorHandlingField>
+          <ErrorHandlingField
+            style={APP_THEME.inputContainerStyle}
+            title={'Password'}
+            errorMessage={errors[FORM_KEYS.PASSWORD]}>
+            <TextInput
+              value={formValues[FORM_KEYS.PASSWORD]}
+              onChangeText={newValue =>
+                onFieldValueChange(FORM_KEYS.PASSWORD, newValue)
+              }
+              secureTextEntry={true}
+              style={APP_THEME.defaultInputStyle}
+            />
+          </ErrorHandlingField>
+          <ErrorHandlingField
+            style={APP_THEME.inputContainerStyle}
+            title={'Contact Number'}
+            errorMessage={errors[FORM_KEYS.CONTACT_NUMBER]}>
+            <TextInput
+              value={formValues[FORM_KEYS.CONTACT_NUMBER]}
+              onChangeText={newValue =>
+                onFieldValueChange(FORM_KEYS.CONTACT_NUMBER, newValue)
+              }
+              keyboardType={'numeric'}
+              style={APP_THEME.defaultInputStyle}
+            />
+          </ErrorHandlingField>
+        </View>
 
         <Button
           title={'Add Facility'}
@@ -364,7 +282,7 @@ export const AddFacilityScreen = ({navigation}) => {
               style={{marginRight: 8}}
             />
           }
-          onPress={() => addItem()}
+          onPress={onFormSubmit}
         />
       </ScrollView>
     </View>

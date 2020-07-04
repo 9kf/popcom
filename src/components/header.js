@@ -10,10 +10,9 @@ import {Icon, Button} from 'react-native-elements';
 
 export const CustomHeader = ({
   title,
-  navigation,
+  LeftComponentFunc,
   RightComponent,
   type,
-  fromScreen,
 }) => (
   <View style={styles.container}>
     <View style={styles.barStyle}>
@@ -22,14 +21,14 @@ export const CustomHeader = ({
           name="chevron-left"
           type="font-awesome-5"
           color="#333"
-          onPress={() => navigation.navigate(fromScreen)}
+          onPress={() => LeftComponentFunc()}
         />
       ) : (
         <Icon
           name="bars"
           type="font-awesome"
           color="#333"
-          onPress={() => navigation.openDrawer()}
+          onPress={() => LeftComponentFunc()}
         />
       )}
     </View>

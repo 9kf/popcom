@@ -1,135 +1,119 @@
-import React, {useState, useContext} from 'react';
+import React, {useEffect, useContext} from 'react';
+import * as R from 'ramda';
 
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
-  Image,
   TextInput,
   Picker,
 } from 'react-native';
 
-import {CustomHeader} from '../components';
+import {
+  CustomHeader,
+  ErrorHandlingField,
+  ImagePickerComponent,
+} from '../components';
 
-import {Button, Icon, Card} from 'react-native-elements';
-
-import ImagePicker from 'react-native-image-picker';
+import {Button, Icon} from 'react-native-elements';
 
 import {AuthContext} from '../context';
 
-import {CATEGORIES, POPCOM_URL} from '../utils/constants';
+import {CATEGORIES, POPCOM_URL, APP_THEME} from '../utils/constants';
 
-const Gallery = ({image, setImage}) => {
-  const launchGallery = () => {
-    ImagePicker.launchImageLibrary({}, response => {
-      setImage(response);
-      console.log(response);
-    });
-  };
+import {useForm, useFetch} from '../hooks';
 
-  return (
-    <TouchableOpacity onPress={launchGallery}>
-      <View
-        style={{
-          flex: 1,
-          alignItems: 'center',
-          justifyContent: 'center',
-          flexDirection: 'row',
-          borderWidth: 2,
-          borderColor: '#C0C1C2',
-          borderRadius: 8,
-          marginHorizontal: 20,
-          padding: 12,
-        }}>
-        {image ? (
-          <Image source={image} style={{height: 70, resizeMode: 'contain'}} />
-        ) : (
-          <>
-            <View
-              style={{
-                backgroundColor: '#D9D9D9',
-                borderRadius: 40,
-                padding: 12,
-                marginRight: 16,
-              }}>
-              <Icon
-                name="camera"
-                type="font-awesome-5"
-                color={'#fff'}
-                size={20}
-              />
-            </View>
-            <Text style={{color: '#B4B4B4'}}>Upload Item / Take a Photo</Text>
-          </>
-        )}
-      </View>
-    </TouchableOpacity>
-  );
+const FORM_KEYS = {
+  ITEM_SKU: 'item_sku',
+  ITEM_NAME: 'item_name',
+  ITEM_DESCRIPTION: 'item_description',
+  CATEGORY: 'category',
+  IMAGE: 'image',
+  STATUS: 'status',
+  API_TOKEN: 'api_token',
 };
 
 export const AddItemScreen = ({navigation}) => {
   const {getUser} = useContext(AuthContext);
   const {api_token} = getUser();
 
-  const [image, setImage] = useState(null);
-  const [itemName, setItemName] = useState('');
-  const [barcode, setBarcode] = useState('');
-  const [category, setCategory] = useState(CATEGORIES[0]);
-  const [description, setDescription] = useState('');
+  const {data, errorMessage, isLoading, fetchData} = useFetch();
 
-  const resetForm = () => {
-    setImage(null);
-    setItemName('');
-    setBarcode('');
-    setCategory(CATEGORIES[0]);
-    setDescription('');
+  const validate = formValues => {
+    let errors = {};
+    const newValues = R.assoc(
+      FORM_KEYS.IMAGE,
+      formValues[FORM_KEYS.IMAGE]?.data,
+      formValues,
+    );
+    //required fields must not be empty
+    Object.keys(FORM_KEYS).forEach((key, index) => {
+      if (!newValues[FORM_KEYS[key]] || newValues[FORM_KEYS[key]].trim() === '')
+        errors[FORM_KEYS[key]] = `${FORM_KEYS[key]} must not be empty`;
+    });
+
+    console.log(errors);
+    return errors;
   };
 
-  const addItem = async () => {
-    const params = new URLSearchParams({
-      item_sku: barcode,
-      item_name: itemName,
-      item_description: description,
-      category: category,
-      //   image: image.data,
-      status: 1,
-      api_token: api_token,
-    });
-    const endpoint = POPCOM_URL + `/api/create-item?${params.toString()}`;
-    const response = await fetch(endpoint, {
+  const addItem = async formValues => {
+    const newValues = R.assoc(
+      FORM_KEYS.IMAGE,
+      formValues[FORM_KEYS.IMAGE]?.data,
+      formValues,
+    );
+    const params = new URLSearchParams(newValues);
+    const options = {
       headers: {
         accept: 'application/json',
       },
       method: 'post',
-    });
-
-    if (!response.ok) {
-      alert('Failed to add the item');
-      return;
-    }
-
-    const json = await response.json();
-    navigation.navigate('ItemMaster');
-    resetForm();
+    };
+    const endpoint = POPCOM_URL + `/api/create-item?${params.toString()}`;
+    fetchData(endpoint, options, () => alert('Failed to add the item'));
   };
+
+  const initialState = {
+    [FORM_KEYS.CATEGORY]: CATEGORIES[0].name,
+    [FORM_KEYS.API_TOKEN]: api_token,
+    [FORM_KEYS.STATUS]: '1',
+  };
+  const {
+    onFieldValueChange,
+    onFormSubmit,
+    resetForm,
+    errors,
+    formValues,
+  } = useForm(initialState, addItem, validate);
+
+  useEffect(() => {
+    if (data) {
+      navigation.navigate('ItemMaster');
+      resetForm();
+    }
+  }, [data]);
 
   return (
     <View style={styles.container}>
       <CustomHeader
-        navigation={navigation}
+        LeftComponentFunc={() => {
+          resetForm();
+          navigation.navigate('ItemMaster');
+        }}
         title={'Create Item'}
         type={1}
-        fromScreen={'ItemMaster'}
       />
       <ScrollView showsVerticalScrollIndicator={false}>
-        <Gallery setImage={setImage} image={image} />
-        <Card
-          containerStyle={{
-            borderRadius: 8,
+        <ImagePickerComponent
+          setImage={onFieldValueChange(FORM_KEYS.IMAGE)}
+          image={formValues[FORM_KEYS.IMAGE]}
+          errorMessage={errors[FORM_KEYS.IMAGE]}
+        />
+        <View
+          style={{
             marginHorizontal: 20,
-            elevation: 3,
+            paddingVertical: 20,
           }}>
           <View style={{flexDirection: 'row', marginBottom: 12}}>
             <Icon
@@ -142,101 +126,68 @@ export const AddItemScreen = ({navigation}) => {
               Item Information
             </Text>
           </View>
-          <TextInput
-            placeholder="Item Name"
-            value={itemName}
-            onChangeText={newValue => setItemName(newValue)}
-            style={{
-              borderWidth: 1,
-              borderRadius: 8,
-              paddingVertical: 4,
-              paddingHorizontal: 8,
-              marginBottom: 8,
-              borderColor: '#B7B7B7',
-            }}
-          />
-          <TextInput
-            placeholder="Barcode / SKU"
-            value={barcode}
-            onChangeText={newValue => setBarcode(newValue)}
-            style={{
-              borderWidth: 1,
-              borderRadius: 8,
-              paddingVertical: 4,
-              paddingHorizontal: 8,
-              marginBottom: 8,
-              borderColor: '#B7B7B7',
-            }}
-          />
-          <View
-            style={{
-              borderWidth: 1,
-              borderRadius: 8,
-              marginBottom: 8,
-              borderColor: '#B7B7B7',
-            }}>
+          <ErrorHandlingField
+            title={'Item Name'}
+            errorMessage={errors[FORM_KEYS.ITEM_NAME]}
+            style={APP_THEME.inputContainerStyle}>
+            <TextInput
+              value={formValues[FORM_KEYS.ITEM_NAME]}
+              onChangeText={newValue =>
+                onFieldValueChange(FORM_KEYS.ITEM_NAME, newValue)
+              }
+              style={APP_THEME.defaultInputStyle}
+            />
+          </ErrorHandlingField>
+          <ErrorHandlingField
+            title={'Barcode / SKU'}
+            errorMessage={errors[FORM_KEYS.ITEM_SKU]}
+            style={APP_THEME.inputContainerStyle}>
+            <TextInput
+              value={formValues[FORM_KEYS.ITEM_SKU]}
+              onChangeText={newValue =>
+                onFieldValueChange(FORM_KEYS.ITEM_SKU, newValue)
+              }
+              style={APP_THEME.defaultInputStyle}
+            />
+          </ErrorHandlingField>
+          <ErrorHandlingField
+            errorMessage={errors[FORM_KEYS.CATEGORY]}
+            title={'Item Category'}
+            style={APP_THEME.inputContainerStyle}>
             <Picker
               style={{height: 37}}
-              selectedValue={category}
-              onValueChange={(value, index) => setCategory(value)}
+              selectedValue={formValues[FORM_KEYS.CATEGORY]}
+              onValueChange={(value, index) =>
+                onFieldValueChange(FORM_KEYS.CATEGORY, value)
+              }
               mode={'dropdown'}>
               {CATEGORIES.map((item, index) => (
                 <Picker.Item key={index} value={item.name} label={item.name} />
               ))}
             </Picker>
-          </View>
-          <TextInput
-            multiline={true}
-            numberOfLines={5}
-            placeholder="Description"
-            value={description}
-            onChangeText={newValue => setDescription(newValue)}
-            style={{
-              borderWidth: 1,
-              borderRadius: 8,
-              paddingVertical: 4,
-              paddingHorizontal: 8,
-              marginBottom: 8,
-              borderColor: '#B7B7B7',
-              textAlignVertical: 'top',
-            }}
-          />
-        </Card>
-
-        {/* <Card
-          containerStyle={{
-            borderRadius: 8,
-            marginHorizontal: 20,
-            elevation: 3,
-            marginBottom: 12,
-          }}>
-          <View style={{flexDirection: 'row', marginBottom: 12}}>
-            <Icon
-              name="cart-plus"
-              type="font-awesome-5"
-              color={'#333333'}
-              size={20}
+          </ErrorHandlingField>
+          <ErrorHandlingField
+            errorMessage={errors[FORM_KEYS.ITEM_DESCRIPTION]}
+            title={'Item Description'}
+            style={APP_THEME.inputContainerStyle}>
+            <TextInput
+              multiline={true}
+              numberOfLines={5}
+              value={formValues[FORM_KEYS.ITEM_DESCRIPTION]}
+              onChangeText={newValue =>
+                onFieldValueChange(FORM_KEYS.ITEM_DESCRIPTION, newValue)
+              }
+              style={APP_THEME.defaultInputStyle}
             />
-            <Text style={{color: '#333333', marginLeft: 12}}>
-              Beginning Inventory
-            </Text>
-          </View>
-
-          <Button
-            title={'Add Batch Inventory'}
-            buttonStyle={{
-              backgroundColor: '#043D10',
-              borderRadius: 6,
-            }}
-          />
-        </Card> */}
+          </ErrorHandlingField>
+        </View>
 
         <Button
           title={'Add New Item'}
           buttonStyle={{
             backgroundColor: '#043D10',
             borderRadius: 6,
-            margin: 20,
+            marginHorizontal: 20,
           }}
           icon={
             <Icon
@@ -247,7 +198,8 @@ export const AddItemScreen = ({navigation}) => {
               style={{marginRight: 8}}
             />
           }
-          onPress={() => addItem()}
+          loading={isLoading}
+          onPress={onFormSubmit}
         />
       </ScrollView>
     </View>

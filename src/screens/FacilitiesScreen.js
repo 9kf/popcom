@@ -172,7 +172,7 @@ export const FacilitiesScreen = ({navigation}) => {
     <View style={styles.container}>
       <CustomHeader
         title={'Facility'}
-        navigation={navigation}
+        LeftComponentFunc={() => navigation.openDrawer()}
         RightComponent={<AddFacilityButton navigation={navigation} />}
       />
       <ScrollView showsVerticalScrollIndicator={false}>

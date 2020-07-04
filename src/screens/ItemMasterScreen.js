@@ -56,7 +56,7 @@ export const ItemMasterScreen = ({navigation}) => {
     <View style={styles.container}>
       <CustomHeader
         title={'Items'}
-        navigation={navigation}
+        LeftComponentFunc={() => navigation.openDrawer()}
         RightComponent={<AddItemButton navigation={navigation} />}
       />
       <ScrollView

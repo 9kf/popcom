@@ -36,7 +36,7 @@ export const LoginScreen = () => {
       },
       method: 'post',
     };
-    fetchData(endpoint, options);
+    fetchData(endpoint, options, () => alert('Incorrect username or password'));
   };
 
   useEffect(() => {

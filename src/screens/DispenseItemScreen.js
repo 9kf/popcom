@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState} from 'react';
 
 import {View, Text, StyleSheet, ScrollView} from 'react-native';
 
@@ -6,9 +6,12 @@ import {CustomHeader, ItemCard} from '../components';
 
 import {Button} from 'react-native-elements';
 
-const CheckoutCount = () => (
+import {DispenseCheckoutOverlay} from '../overlays';
+
+const CheckoutCount = ({onPressFunc}) => (
   <Button
     title={'4 Checkout'}
+    onPress={() => onPressFunc()}
     buttonStyle={{backgroundColor: '#DAE5E2', borderRadius: 15}}
     titleStyle={{
       color: '#043D10',
@@ -174,12 +177,21 @@ export const DispenseItemScreen = ({navigation}) => {
     },
   ];
 
+  const [isCheckoutVisible, setIsCheckoutVisible] = useState(false);
+
   return (
     <View style={styles.container}>
+      <DispenseCheckoutOverlay
+        onBackdropPress={() => setIsCheckoutVisible(false)}
+        isVisible={isCheckoutVisible}
+      />
+
       <CustomHeader
         title={'Dispense'}
-        navigation={navigation}
-        RightComponent={<CheckoutCount />}
+        LeftComponentFunc={() => navigation.openDrawer()}
+        RightComponent={
+          <CheckoutCount onPressFunc={() => setIsCheckoutVisible(true)} />
+        }
       />
       <ScrollView showsVerticalScrollIndicator={false}>
         {items.map((item, index) => {
