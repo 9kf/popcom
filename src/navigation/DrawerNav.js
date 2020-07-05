@@ -13,6 +13,7 @@ import {
   FacilitiesScreen,
   AddItemScreen,
   AddFacilityScreen,
+  FacilityScreen,
 } from '../screens';
 
 const DrawerNav = createDrawerNavigator();
@@ -30,6 +31,7 @@ export const DrawerNavigation = () => {
         <DrawerNav.Screen name="Facilities" component={FacilitiesScreen} />
         <DrawerNav.Screen name="AddItem" component={AddItemScreen} />
         <DrawerNav.Screen name="AddFacility" component={AddFacilityScreen} />
+        <DrawerNav.Screen name="Facility" component={FacilityScreen} />
       </DrawerNav.Navigator>
     </NavigationContainer>
   );

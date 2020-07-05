@@ -98,7 +98,7 @@ const DispenseItemsExtension = ({itemDetails}) => {
  */
 
 export const ItemCard = ({
-  navigation,
+  nextFunc,
   title,
   tag,
   tagColor,
@@ -116,7 +116,7 @@ export const ItemCard = ({
         <View style={{width: '65%'}}>
           <Text style={styles.title}>{title}</Text>
           {type === 3 ? (
-            <View style={styles.tags}>
+            <View style={{...styles.tags, alignItems: 'center'}}>
               <Icon
                 name="map-marker-alt"
                 type="font-awesome-5"
@@ -124,9 +124,7 @@ export const ItemCard = ({
                 size={12}
                 style={{marginRight: 4}}
               />
-              <Text style={{fontSize: 10, color: '#B3B3B3'}}>
-                Facility's Address Here
-              </Text>
+              <Text style={{fontSize: 10, color: '#B3B3B3'}}>{price}</Text>
             </View>
           ) : (
             <View style={styles.tags}>
@@ -207,6 +205,7 @@ export const ItemCard = ({
               type="font-awesome-5"
               color="#D9D9D9"
               size={18}
+              onPress={() => nextFunc()}
             />
           </View>
         ) : (

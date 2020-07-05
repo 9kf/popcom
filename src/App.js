@@ -2,6 +2,7 @@ import React, {useState, useEffect} from 'react';
 import {View, AsyncStorage} from 'react-native';
 
 import {AuthContext} from './context';
+import {MockApiContext, useMockApi} from './utils/mockAPI';
 
 import {DrawerNavigation} from './navigation';
 import {LoginScreen, SplashScreen} from './screens';
@@ -9,6 +10,7 @@ import {LoginScreen, SplashScreen} from './screens';
 const App = () => {
   const [user, setUser] = useState(null);
   const [isRetrieving, setIsRetrieving] = useState(true);
+  const {mockValues} = useMockApi();
 
   const login = userDetails => {
     try {
@@ -37,8 +39,9 @@ const App = () => {
       await AsyncStorage.getItem('user_data', (err, result) => {
         if (result) {
           setUser(JSON.parse(result));
-          setIsRetrieving(false);
         }
+
+        setIsRetrieving(false);
       });
     } catch (e) {
       setIsRetrieving(false);
@@ -52,14 +55,16 @@ const App = () => {
 
   return (
     <AuthContext.Provider value={authContext}>
-      {isRetrieving ? (
-        <SplashScreen />
-      ) : (
-        <View style={{flex: 1}}>
-          {/* <DrawerNavigation /> */}
-          {user ? <DrawerNavigation /> : <LoginScreen />}
-        </View>
-      )}
+      <MockApiContext.Provider value={mockValues}>
+        {isRetrieving ? (
+          <SplashScreen />
+        ) : (
+          <View style={{flex: 1}}>
+            {/* <DrawerNavigation /> */}
+            {user ? <DrawerNavigation /> : <LoginScreen />}
+          </View>
+        )}
+      </MockApiContext.Provider>
     </AuthContext.Provider>
   );
 };

@@ -1,10 +1,16 @@
-import React from 'react';
+import React, {useContext, useState, useEffect} from 'react';
 
-import {View, Text, StyleSheet, ScrollView} from 'react-native';
+import {View, StyleSheet, ScrollView} from 'react-native';
 
 import {CustomHeader, ItemCard} from '../components';
 
 import {Button, Icon} from 'react-native-elements';
+
+import {AuthContext} from '../context';
+
+import {useFetch} from '../hooks';
+
+import {FACILITY_TYPE, POPCOM_URL} from '../utils/constants';
 
 const AddFacilityButton = ({navigation}) => (
   <Button
@@ -15,158 +21,35 @@ const AddFacilityButton = ({navigation}) => (
 );
 
 export const FacilitiesScreen = ({navigation}) => {
-  const items = [
-    {
-      title: 'Lutopan Rural Facility',
-      count: 5,
-      tag: 'RHU',
-      price: 2500,
-      tagColor: '#D5EAFF',
-      tagLabelColor: '#55AAED',
-      itemDetails: [
-        {
-          lotNumber: '2020-3021',
-          expiryDate: new Date(),
-          quantity: 1000,
-        },
-        {
-          lotNumber: '2020-3021',
-          expiryDate: new Date(),
-          quantity: 1000,
-        },
-        {
-          lotNumber: '2020-3021',
-          expiryDate: new Date(),
-          quantity: 1000,
-        },
-      ],
-    },
-    {
-      title: 'Argao Rural Facility',
-      count: 2,
-      tag: 'RHU',
-      price: 2600,
-      tagColor: '#D5EAFF',
-      tagLabelColor: '#55AAED',
-      itemDetails: [
-        {
-          lotNumber: '2020-3021',
-          expiryDate: new Date(),
-          quantity: 1000,
-        },
-        {
-          lotNumber: '2020-3021',
-          expiryDate: new Date(),
-          quantity: 1000,
-        },
-        {
-          lotNumber: '2020-3021',
-          expiryDate: new Date(),
-          quantity: 1000,
-        },
-      ],
-    },
-    {
-      title: 'Talisay Municipal Facility',
-      count: 0,
-      tag: 'MHC',
-      price: 1600,
-      tagColor: '#FED7E5',
-      tagLabelColor: '#F288B9',
-      itemDetails: [
-        {
-          lotNumber: '2020-3021',
-          expiryDate: new Date(),
-          quantity: 1000,
-        },
-        {
-          lotNumber: '2020-3021',
-          expiryDate: new Date(),
-          quantity: 1000,
-        },
-        {
-          lotNumber: '2020-3021',
-          expiryDate: new Date(),
-          quantity: 1000,
-        },
-      ],
-    },
-    {
-      title: 'Panglao Municipal Facility',
-      count: 6,
-      tag: 'CHO',
-      price: 780,
-      tagColor: '#CCFAED',
-      tagLabelColor: '#39CAAD',
-      itemDetails: [
-        {
-          lotNumber: '2020-3021',
-          expiryDate: new Date(),
-          quantity: 1000,
-        },
-        {
-          lotNumber: '2020-3021',
-          expiryDate: new Date(),
-          quantity: 1000,
-        },
-        {
-          lotNumber: '2020-3021',
-          expiryDate: new Date(),
-          quantity: 1000,
-        },
-      ],
-    },
-    {
-      title: 'Toledo Municipal Facility',
-      count: 6,
-      tag: 'CHO',
-      price: 780,
-      tagColor: '#CCFAED',
-      tagLabelColor: '#39CAAD',
-      itemDetails: [
-        {
-          lotNumber: '2020-3021',
-          expiryDate: new Date(),
-          quantity: 1000,
-        },
-        {
-          lotNumber: '2020-3021',
-          expiryDate: new Date(),
-          quantity: 1000,
-        },
-        {
-          lotNumber: '2020-3021',
-          expiryDate: new Date(),
-          quantity: 1000,
-        },
-      ],
-    },
-    {
-      title: 'Naga Rural Facility',
-      count: 6,
-      tag: 'CHO',
-      price: 780,
-      tagColor: '#CCFAED',
-      tagLabelColor: '#39CAAD',
-      itemDetails: [
-        {
-          lotNumber: '2020-3021',
-          expiryDate: new Date(),
-          quantity: 1000,
-        },
-        {
-          lotNumber: '2020-3021',
-          expiryDate: new Date(),
-          quantity: 1000,
-        },
-        {
-          lotNumber: '2020-3021',
-          expiryDate: new Date(),
-          quantity: 1000,
-        },
-      ],
-    },
-  ];
+  const {getUser} = useContext(AuthContext);
+  const {api_token} = getUser();
+  const {data, errorMessage, isLoading, fetchData} = useFetch();
+
+  const [facilities, setFacilities] = useState([]);
+
+  const getFacilities = async () => {
+    const urlParams = new URLSearchParams({api_token});
+    const endpoint = `${POPCOM_URL}/api/get-facilities?${urlParams.toString()}`;
+    fetchData(endpoint, {}, () => alert('Unable to get facilities'));
+  };
+
+  const getFacilityTypeTagColor = type => {
+    return FACILITY_TYPE.filter(item => item.name === type)[0].tagColor;
+  };
+
+  const getFacilityTypeTagLabelColor = type => {
+    return FACILITY_TYPE.filter(item => item.name === type)[0].tagLabelColor;
+  };
+
+  useEffect(() => {
+    return navigation.addListener('focus', () => {
+      getFacilities();
+    });
+  }, []);
+
+  useEffect(() => {
+    if (data) setFacilities(data.data);
+  }, [data]);
 
   return (
     <View style={styles.container}>
@@ -176,19 +59,18 @@ export const FacilitiesScreen = ({navigation}) => {
         RightComponent={<AddFacilityButton navigation={navigation} />}
       />
       <ScrollView showsVerticalScrollIndicator={false}>
-        {items.map((item, index) => {
+        {facilities.map(item => {
           return (
             <ItemCard
-              key={index}
-              title={item.title}
-              count={item.count}
+              key={item.id}
+              title={item.facility_name}
+              price={item.address}
               navigation={navigation}
-              price={item.price}
-              tag={item.tag}
-              tagColor={item.tagColor}
-              tagLabelColor={item.tagLabelColor}
-              details={item.itemDetails}
+              tag={item.facility_type}
+              tagColor={getFacilityTypeTagColor(item.facility_type)}
+              tagLabelColor={getFacilityTypeTagLabelColor(item.facility_type)}
               type={3}
+              nextFunc={() => navigation.navigate('Facility', item)}
             />
           );
         })}

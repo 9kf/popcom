@@ -13,6 +13,7 @@ export const CustomHeader = ({
   LeftComponentFunc,
   RightComponent,
   type,
+  subHeader,
 }) => (
   <View style={styles.container}>
     <View style={styles.barStyle}>
@@ -33,7 +34,10 @@ export const CustomHeader = ({
       )}
     </View>
 
-    <Text style={styles.titleStyle}>{title}</Text>
+    <View style={{flexGrow: 1}}>
+      <Text style={styles.titleStyle}>{title}</Text>
+      {subHeader && <Text style={styles.subHeaderStyle}>{subHeader}</Text>}
+    </View>
 
     {RightComponent && RightComponent}
   </View>
@@ -54,5 +58,9 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     color: '#333333',
+  },
+  subHeaderStyle: {
+    fontSize: 12,
+    color: 'gray',
   },
 });

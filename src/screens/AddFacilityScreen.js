@@ -49,15 +49,24 @@ const FORM_KEYS = {
 export const AddFacilityScreen = ({navigation}) => {
   const {getUser} = useContext(AuthContext);
   const {api_token} = getUser();
+  const {data, isLoading, errorMessage, fetchData} = useFetch();
+
+  const getRequestBodyFromValues = formValues => {
+    return R.pipe(
+      R.assoc(FORM_KEYS.ADDRESS, formValues[FORM_KEYS.ADDRESS]?.place_name),
+      R.assoc(
+        FORM_KEYS.PROVINCE,
+        formValues[FORM_KEYS.ADDRESS]?.context[1].text,
+      ),
+      R.assoc(FORM_KEYS.LONGITUDE, formValues[FORM_KEYS.ADDRESS]?.center[0]),
+      R.assoc(FORM_KEYS.LATITUDE, formValues[FORM_KEYS.ADDRESS]?.center[1]),
+    )(formValues);
+  };
 
   const validate = formValues => {
     let errors = {};
 
-    const newValues = R.assoc(
-      FORM_KEYS.ADDRESS,
-      formValues[FORM_KEYS.ADDRESS]?.place_name,
-      formValues,
-    );
+    const newValues = getRequestBodyFromValues(formValues);
 
     const requiredFields = Object.keys(FORM_KEYS).filter(
       key => key != 'LONGITUDE' && key != 'LATITUDE',
@@ -69,41 +78,24 @@ export const AddFacilityScreen = ({navigation}) => {
         errors[FORM_KEYS[key]] = `${FORM_KEYS[key]} must not be empty`;
     });
 
+    console.log(errors);
+
     return errors;
   };
 
   const addFacility = async formValues => {
-    console.log(formValues);
-    // const requestBody = new URLSearchParams({
-    //   first_name: firstName,
-    //   last_name: lastName,
-    //   contact_number: contactNumber,
-    //   email: email,
-    //   password: password,
-    //   user_status: '1',
-    //   facility_name: facilityName,
-    //   address: selectedAddress.place_name,
-    //   region: '7',
-    //   province: selectedAddress.context[1].text,
-    //   longitude: selectedAddress.geometry.coordinates[0].toString(),
-    //   latitude: selectedAddress.geometry.coordinates[1].toString(),
-    //   api_token: api_token,
-    // });
-    // console.log(requestBody);
-    // const endpoint = `${POPCOM_URL}/api/create-facility?${requestBody.toString()}`;
-    // const response = await fetch(endpoint, {
-    //   headers: {
-    //     accept: 'application/json',
-    //   },
-    //   method: 'post',
-    // });
-    // if (!response.ok) {
-    //   alert('failed');
-    //   console.log(response);
-    //   return;
-    // }
-    // const json = await response.json();
-    // console.log(json);
+    console.log(getRequestBodyFromValues(formValues));
+    const requestBody = new URLSearchParams(
+      getRequestBodyFromValues(formValues),
+    );
+    const endpoint = `${POPCOM_URL}/api/create-facility?${requestBody.toString()}`;
+    const options = {
+      headers: {
+        accept: 'application/json',
+      },
+      method: 'post',
+    };
+    fetchData(endpoint, options, () => alert('failed to create facility'));
   };
 
   const initialState = {
@@ -119,6 +111,13 @@ export const AddFacilityScreen = ({navigation}) => {
     errors,
     formValues,
   } = useForm(initialState, addFacility, validate);
+
+  useEffect(() => {
+    if (data) {
+      resetForm();
+      navigation.navigate('Facilities');
+    }
+  }, [data]);
 
   return (
     <View style={styles.container}>
@@ -175,6 +174,7 @@ export const AddFacilityScreen = ({navigation}) => {
               ))}
             </Picker>
           </ErrorHandlingField>
+
           <PlaceFinder
             title={'Facility Location'}
             setValue={onFieldValueChange(FORM_KEYS.ADDRESS)}
@@ -182,6 +182,35 @@ export const AddFacilityScreen = ({navigation}) => {
             errorBorderColor={'red'}
             errorMessage={errors[FORM_KEYS.ADDRESS]}
           />
+
+          <View style={{flexDirection: 'row'}}>
+            <ErrorHandlingField
+              title={'Province'}
+              style={APP_THEME.inputContainerStyle}
+              errorMessage={errors[FORM_KEYS.PROVINCE]}>
+              <TextInput
+                value={formValues[FORM_KEYS.ADDRESS]?.context[1].text}
+                editable={false}
+                style={{...APP_THEME.defaultInputStyle, color: 'black'}}
+              />
+            </ErrorHandlingField>
+
+            <View style={{padding: 8}} />
+
+            <ErrorHandlingField
+              title={'Region'}
+              style={APP_THEME.inputContainerStyle}
+              errorMessage={errors[FORM_KEYS.REGION]}>
+              <TextInput
+                value={formValues[FORM_KEYS.REGION]}
+                keyboardType={'numeric'}
+                onChangeText={newValue =>
+                  onFieldValueChange(FORM_KEYS.REGION, newValue)
+                }
+                style={APP_THEME.defaultInputStyle}
+              />
+            </ErrorHandlingField>
+          </View>
         </View>
 
         <View
@@ -268,6 +297,7 @@ export const AddFacilityScreen = ({navigation}) => {
 
         <Button
           title={'Add Facility'}
+          loading={isLoading}
           buttonStyle={{
             backgroundColor: '#043D10',
             borderRadius: 6,

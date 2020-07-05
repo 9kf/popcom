@@ -8,7 +8,7 @@ export const ErrorHandlingField = ({
   errorBorderColor = 'red',
   children,
 }) => (
-  <View>
+  <View style={{flexGrow: 1}}>
     <Text
       style={{
         color: errorMessage ? errorBorderColor : 'gray',
