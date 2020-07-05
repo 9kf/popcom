@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useContext} from 'react';
 
 import {View, Text, StyleSheet, ScrollView, RefreshControl} from 'react-native';
 
@@ -8,7 +8,9 @@ import {Button, Icon} from 'react-native-elements';
 
 import {AuthContext} from '../context';
 
-import {POPCOM_URL, CATEGORIES} from '../utils/constants';
+import {POPCOM_URL} from '../utils/constants';
+
+import {useFetch} from '../hooks';
 
 import {getTagColor, getTagLabelColor} from '../utils/helper';
 
@@ -22,35 +24,32 @@ const AddItemButton = ({navigation}) => (
 
 export const ItemMasterScreen = ({navigation}) => {
   const [items, setItems] = useState([]);
-  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const {getUser} = useContext(AuthContext);
+  const {api_token} = getUser();
+
+  const {data, errorMessage, isLoading, fetchData} = useFetch();
 
   const fetchItems = async () => {
-    setIsRefreshing(true);
-    const endpoint =
-      POPCOM_URL +
-      '/api/get-items?api_token=' +
-      'XyS1kMrDuHBNMqzmuFBKoKoGY11DSresfUcd6hz0wwNRAOYMEZ8DbcGf7yQV';
-    const response = await fetch(endpoint, {
+    const endpoint = `${POPCOM_URL}/api/get-items?api_token=${api_token}`;
+    const options = {
       headers: {
         accept: 'application/json',
       },
       method: 'post',
-    });
-
-    if (!response.ok) {
-      alert('failed to get items');
-      setIsRefreshing(false);
-      return;
-    }
-
-    const json = await response.json();
-    setItems(json.data);
-    setIsRefreshing(false);
+    };
+    fetchData(endpoint, options, () => alert('Failed to get list of items'));
   };
 
   useEffect(() => {
-    fetchItems();
+    return navigation.addListener('focus', () => {
+      fetchItems();
+    });
   }, []);
+
+  useEffect(() => {
+    if (data) setItems(data.data);
+  }, [data]);
 
   return (
     <View style={styles.container}>
@@ -63,7 +62,7 @@ export const ItemMasterScreen = ({navigation}) => {
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
-            refreshing={isRefreshing}
+            refreshing={isLoading}
             onRefresh={() => fetchItems()}
           />
         }>

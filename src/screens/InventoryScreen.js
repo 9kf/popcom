@@ -1,162 +1,48 @@
-import React from 'react';
+import React, {useState, useEffect, useContext} from 'react';
 
-import {View, Text, StyleSheet, ScrollView} from 'react-native';
+import {View, Text, StyleSheet, ScrollView, RefreshControl} from 'react-native';
 
 import {CustomHeader, ItemCard} from '../components';
 
+import {
+  getUserById,
+  getTagColor,
+  getTagLabelColor,
+  getTotalItemCount,
+} from '../utils/helper';
+import {AuthContext} from '../context';
+import {POPCOM_URL, APP_THEME} from '../utils/constants';
+
+import {MockApiContext} from '../utils/mockAPI';
+import {useFetch} from '../hooks';
+
 export const InventoryScreen = ({navigation}) => {
-  const items = [
-    {
-      title: 'Trust Chocolate Condom',
-      count: 5,
-      tag: 'Male Condom',
-      price: 2500,
-      tagColor: '#D5EAFF',
-      tagLabelColor: '#55AAED',
-      itemDetails: [
-        {
-          lotNumber: '2020-3021',
-          expiryDate: new Date(),
-          quantity: 1000,
-        },
-        {
-          lotNumber: '2020-3021',
-          expiryDate: new Date(),
-          quantity: 1000,
-        },
-        {
-          lotNumber: '2020-3021',
-          expiryDate: new Date(),
-          quantity: 1000,
-        },
-      ],
-    },
-    {
-      title: 'Durex Light Condom',
-      count: 2,
-      tag: 'Male Condom',
-      price: 2600,
-      tagColor: '#D5EAFF',
-      tagLabelColor: '#55AAED',
-      itemDetails: [
-        {
-          lotNumber: '2020-3021',
-          expiryDate: new Date(),
-          quantity: 1000,
-        },
-        {
-          lotNumber: '2020-3021',
-          expiryDate: new Date(),
-          quantity: 1000,
-        },
-        {
-          lotNumber: '2020-3021',
-          expiryDate: new Date(),
-          quantity: 1000,
-        },
-      ],
-    },
-    {
-      title: 'Mango Female Condom',
-      count: 0,
-      tag: 'RHU',
-      price: 1600,
-      tagColor: '#FED7E5',
-      tagLabelColor: '#F288B9',
-      itemDetails: [
-        {
-          lotNumber: '2020-3021',
-          expiryDate: new Date(),
-          quantity: 1000,
-        },
-        {
-          lotNumber: '2020-3021',
-          expiryDate: new Date(),
-          quantity: 1000,
-        },
-        {
-          lotNumber: '2020-3021',
-          expiryDate: new Date(),
-          quantity: 1000,
-        },
-      ],
-    },
-    {
-      title: 'Mercilon - 21 Pills',
-      count: 6,
-      tag: 'Pills',
-      price: 780,
-      tagColor: '#CCFAED',
-      tagLabelColor: '#39CAAD',
-      itemDetails: [
-        {
-          lotNumber: '2020-3021',
-          expiryDate: new Date(),
-          quantity: 1000,
-        },
-        {
-          lotNumber: '2020-3021',
-          expiryDate: new Date(),
-          quantity: 1000,
-        },
-        {
-          lotNumber: '2020-3021',
-          expiryDate: new Date(),
-          quantity: 1000,
-        },
-      ],
-    },
-    {
-      title: 'Marvelon - 28 Pills',
-      count: 6,
-      tag: 'Pills',
-      price: 780,
-      tagColor: '#CCFAED',
-      tagLabelColor: '#39CAAD',
-      itemDetails: [
-        {
-          lotNumber: '2020-3021',
-          expiryDate: new Date(),
-          quantity: 1000,
-        },
-        {
-          lotNumber: '2020-3021',
-          expiryDate: new Date(),
-          quantity: 1000,
-        },
-        {
-          lotNumber: '2020-3021',
-          expiryDate: new Date(),
-          quantity: 1000,
-        },
-      ],
-    },
-    {
-      title: 'D - 35 Pills',
-      count: 6,
-      tag: 'Pills',
-      price: 780,
-      tagColor: '#CCFAED',
-      tagLabelColor: '#39CAAD',
-      itemDetails: [
-        {
-          lotNumber: '2020-3021',
-          expiryDate: new Date(),
-          quantity: 1000,
-        },
-        {
-          lotNumber: '2020-3021',
-          expiryDate: new Date(),
-          quantity: 1000,
-        },
-        {
-          lotNumber: '2020-3021',
-          expiryDate: new Date(),
-          quantity: 1000,
-        },
-      ],
-    },
-  ];
+  const [items, setItems] = useState([]);
+  const {getUser} = useContext(AuthContext);
+  const {api_token} = getUser();
+  const {data, errorMessage, isLoading, fetchData} = useFetch();
+  const {lotNumbers} = useContext(MockApiContext);
+
+  const fetchItems = async () => {
+    const endpoint = `${POPCOM_URL}/api/get-items?api_token=${api_token}`;
+    const options = {
+      headers: {
+        accept: 'application/json',
+      },
+      method: 'post',
+    };
+    fetchData(endpoint, options, () => alert('Failed to get list of items'));
+  };
+
+  useEffect(() => {
+    return navigation.addListener('focus', () => {
+      fetchItems();
+    });
+  }, []);
+
+  useEffect(() => {
+    if (data) setItems(data.data);
+  }, [data]);
 
   return (
     <View style={styles.container}>
@@ -164,24 +50,31 @@ export const InventoryScreen = ({navigation}) => {
         title={'Inventory'}
         LeftComponentFunc={() => navigation.openDrawer()}
       />
-      {/* <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={isLoading}
+            onRefresh={() => fetchItems()}
+          />
+        }>
         {items.map((item, index) => {
           return (
             <ItemCard
-              key={index}
-              title={item.title}
-              count={item.count}
-              navigation={navigation}
-              price={item.price}
-              tag={item.tag}
-              tagColor={item.tagColor}
-              tagLabelColor={item.tagLabelColor}
-              details={item.itemDetails}
+              title={item.item_name}
+              price={getTotalItemCount(
+                lotNumbers.filter(num => num.itemId === item.id),
+              )}
+              tag={item.category}
+              tagColor={getTagColor(item.category)}
+              tagLabelColor={getTagLabelColor(item.category)}
+              details={lotNumbers.filter(num => num.itemId === item.id)}
+              showAdjustInventoryButton={true}
               type={1}
             />
           );
         })}
-      </ScrollView> */}
+      </ScrollView>
     </View>
   );
 };

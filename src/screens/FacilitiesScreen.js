@@ -1,6 +1,6 @@
 import React, {useContext, useState, useEffect} from 'react';
 
-import {View, StyleSheet, ScrollView} from 'react-native';
+import {View, StyleSheet, ScrollView, RefreshControl} from 'react-native';
 
 import {CustomHeader, ItemCard} from '../components';
 
@@ -55,7 +55,14 @@ export const FacilitiesScreen = ({navigation}) => {
         LeftComponentFunc={() => navigation.openDrawer()}
         RightComponent={<AddFacilityButton navigation={navigation} />}
       />
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={isLoading}
+            onRefresh={() => getFacilities()}
+          />
+        }>
         {facilities.map(item => {
           return (
             <ItemCard
