@@ -82,7 +82,6 @@ export const useMockApi = () => {
 
   const mockValues = {
     lotNumbers: lotNumbers,
-
     setLotNumbers: newLotNumbers => setLotNumbers(newLotNumbers),
   };
 

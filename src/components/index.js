@@ -6,3 +6,4 @@ export * from './customTextInput';
 export * from './errorHandlingField';
 export * from './imagePicker';
 export * from './placeFinder';
+export * from './infoBlock';

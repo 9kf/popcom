@@ -77,6 +77,7 @@ export const ItemMasterScreen = ({navigation}) => {
               tagColor={getTagColor(item.category)}
               tagLabelColor={getTagLabelColor(item.category)}
               type={5}
+              nextFunc={() => navigation.navigate('Item', item)}
             />
           );
         })}

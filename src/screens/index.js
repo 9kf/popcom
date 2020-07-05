@@ -9,3 +9,4 @@ export * from './AddFacilityScreen';
 export * from './AddItemScreen';
 export * from './SplashScreen';
 export * from './FacilityScreen';
+export * from './ItemScreen';

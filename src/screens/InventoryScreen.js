@@ -164,7 +164,7 @@ export const InventoryScreen = ({navigation}) => {
         title={'Inventory'}
         LeftComponentFunc={() => navigation.openDrawer()}
       />
-      <ScrollView showsVerticalScrollIndicator={false}>
+      {/* <ScrollView showsVerticalScrollIndicator={false}>
         {items.map((item, index) => {
           return (
             <ItemCard
@@ -181,7 +181,7 @@ export const InventoryScreen = ({navigation}) => {
             />
           );
         })}
-      </ScrollView>
+      </ScrollView> */}
     </View>
   );
 };

@@ -10,7 +10,12 @@ import {AuthContext} from '../context';
 
 import {useFetch} from '../hooks';
 
-import {FACILITY_TYPE, POPCOM_URL} from '../utils/constants';
+import {POPCOM_URL} from '../utils/constants';
+
+import {
+  getFacilityTypeTagColor,
+  getFacilityTypeTagLabelColor,
+} from '../utils/helper';
 
 const AddFacilityButton = ({navigation}) => (
   <Button
@@ -31,14 +36,6 @@ export const FacilitiesScreen = ({navigation}) => {
     const urlParams = new URLSearchParams({api_token});
     const endpoint = `${POPCOM_URL}/api/get-facilities?${urlParams.toString()}`;
     fetchData(endpoint, {}, () => alert('Unable to get facilities'));
-  };
-
-  const getFacilityTypeTagColor = type => {
-    return FACILITY_TYPE.filter(item => item.name === type)[0].tagColor;
-  };
-
-  const getFacilityTypeTagLabelColor = type => {
-    return FACILITY_TYPE.filter(item => item.name === type)[0].tagLabelColor;
   };
 
   useEffect(() => {

@@ -1,36 +1,12 @@
 import React, {useEffect, useState, useContext, useRef} from 'react';
 import {View, StyleSheet, Text, ScrollView} from 'react-native';
-import {CustomHeader} from '../components';
-import {Icon, Divider} from 'react-native-elements';
+import {CustomHeader, InfoBlock} from '../components';
+import {Divider} from 'react-native-elements';
 
 import MapView, {PROVIDER_GOOGLE, Marker} from 'react-native-maps';
 
-import {POPCOM_URL} from '../utils/constants';
 import {AuthContext} from '../context';
-
-const InfoBlock = ({
-  iconName,
-  header,
-  subHeader,
-  containerStyle = {},
-  iconContainerStyle = {marginRight: 12},
-}) => (
-  <View style={containerStyle}>
-    <View style={{flexDirection: 'row', alignItems: 'center'}}>
-      <Icon
-        name={iconName}
-        type="font-awesome-5"
-        color="#D9D9D9"
-        size={20}
-        containerStyle={iconContainerStyle}
-      />
-      <View>
-        <Text style={{fontWeight: 'bold', fontSize: 16}}>{header}</Text>
-        <Text>{subHeader}</Text>
-      </View>
-    </View>
-  </View>
-);
+import {getUserById} from '../utils/helper';
 
 export const FacilityScreen = ({route, navigation}) => {
   const {
@@ -54,32 +30,10 @@ export const FacilityScreen = ({route, navigation}) => {
 
   let mapRef = useRef(null);
 
-  const getUserById = async userID => {
-    const urlParams = new URLSearchParams({
-      user_id: userID,
-      api_token,
-    });
-    const endpoint = `${POPCOM_URL}/api/get-user?${urlParams.toString()}`;
-    const options = {
-      headers: {
-        accept: 'application/json',
-      },
-      method: 'post',
-    };
-    const request = await fetch(endpoint, options);
-
-    if (!request.ok) {
-      alert('failed to get user');
-      return;
-    }
-
-    return await request.json();
-  };
-
   const getUsers = async () => {
-    const createdBy = await getUserById(created_by);
+    const createdBy = await getUserById(created_by, api_token);
     setCreatedByUser(createdBy.data.first_name);
-    const userRepresentative = await getUserById(user_id);
+    const userRepresentative = await getUserById(user_id, api_token);
     setRepresentative(userRepresentative.data);
   };
 
@@ -203,6 +157,7 @@ export const FacilityScreen = ({route, navigation}) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#F5F9FC',
   },
   dividerStyle: {color: '#B9BABA', height: 1, marginVertical: 10},
 });

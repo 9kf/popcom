@@ -4,7 +4,7 @@ import {Icon, Card, Divider, Button} from 'react-native-elements';
 
 import {Counter} from '../components';
 
-const InventoryExtension = ({itemDetails}) => {
+const InventoryExtension = ({itemDetails, showAdjustInventoryButton}) => {
   return (
     <View style={styles.itemDetailsLayout}>
       <View style={{flexDirection: 'row'}}>
@@ -13,7 +13,7 @@ const InventoryExtension = ({itemDetails}) => {
           {itemDetails.map((item, index) => {
             return (
               <Text key={index} style={{fontWeight: 'bold'}}>
-                {item.lotNumber}
+                {item.number}
               </Text>
             );
           })}
@@ -23,7 +23,7 @@ const InventoryExtension = ({itemDetails}) => {
           {itemDetails.map((item, index) => {
             return (
               <Text key={index} style={{color: '#C0C0C0'}}>
-                {new Date(item.expiryDate).toDateString()}
+                {new Date(item.expiry).toLocaleDateString()}
               </Text>
             );
           })}
@@ -35,20 +35,22 @@ const InventoryExtension = ({itemDetails}) => {
           })}
         </View>
       </View>
-      <Button
-        title={'Adjust Inventory'}
-        buttonStyle={{
-          marginHorizontal: 20,
-          marginTop: 16,
-          backgroundColor: '#043D10',
-          borderRadius: 8,
-        }}
-        titleStyle={{
-          fontSize: 14,
-          fontWeight: 'bold',
-        }}
-        type={'solid'}
-      />
+      {showAdjustInventoryButton && (
+        <Button
+          title={'Adjust Inventory'}
+          buttonStyle={{
+            marginHorizontal: 20,
+            marginTop: 16,
+            backgroundColor: '#043D10',
+            borderRadius: 8,
+          }}
+          titleStyle={{
+            fontSize: 14,
+            fontWeight: 'bold',
+          }}
+          type={'solid'}
+        />
+      )}
     </View>
   );
 };
@@ -107,8 +109,10 @@ export const ItemCard = ({
   count,
   details,
   type,
+  showAdjustInventoryButton = false,
+  defaultCollapsed = true,
 }) => {
-  const [isCollapsed, setIsCollapsed] = useState(true);
+  const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed);
 
   return (
     <Card containerStyle={styles.container}>
@@ -225,7 +229,12 @@ export const ItemCard = ({
         <>
           <Divider style={{backgroundColor: '#fff', elevation: 2}} />
 
-          {type === 1 && <InventoryExtension itemDetails={details} />}
+          {type === 1 && (
+            <InventoryExtension
+              itemDetails={details}
+              showAdjustInventoryButton={showAdjustInventoryButton}
+            />
+          )}
           {type === 2 && <DispenseItemsExtension itemDetails={details} />}
         </>
       )}
