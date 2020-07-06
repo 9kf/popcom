@@ -13,10 +13,6 @@ export const HomeScreen = ({navigation}) => {
   const {getUser} = useContext(AuthContext);
   const {first_name} = getUser();
 
-  // useEffect(()=>{
-  //     console.log(getUser());
-  // },[])
-
   return (
     <View style={profileStyles.container}>
       <View style={profileStyles.profileSection}>
@@ -144,7 +140,7 @@ export const HomeScreen = ({navigation}) => {
                 Inventory
               </Text>
             </Card>
-            <Card containerStyle={optionStyles.card}>
+            <Card containerStyle={{...optionStyles.card, paddingHorizontal: 6}}>
               <Icon
                 name="dolly"
                 type="font-awesome-5"
