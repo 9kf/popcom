@@ -2,94 +2,6 @@ import React, {useState} from 'react';
 import {StyleSheet, View, Text} from 'react-native';
 import {Icon, Card, Divider, Button} from 'react-native-elements';
 
-import {Counter} from '../components';
-
-const InventoryExtension = ({itemDetails, showAdjustInventoryButton}) => {
-  return (
-    <View style={styles.itemDetailsLayout}>
-      <View style={{flexDirection: 'row'}}>
-        <View style={{flex: 1, paddingLeft: 12}}>
-          <Text style={styles.itemDetailsHeader}>BATCH/LOT NO.</Text>
-          {itemDetails.map((item, index) => {
-            return (
-              <Text key={index} style={{fontWeight: 'bold'}}>
-                {item.number}
-              </Text>
-            );
-          })}
-        </View>
-        <View style={{flex: 1, alignItems: 'center'}}>
-          <Text style={styles.itemDetailsHeader}>EXPIRY DATE</Text>
-          {itemDetails.map((item, index) => {
-            return (
-              <Text key={index} style={{color: '#C0C0C0'}}>
-                {new Date(item.expiry).toLocaleDateString()}
-              </Text>
-            );
-          })}
-        </View>
-        <View style={{flex: 1, alignItems: 'center'}}>
-          <Text style={styles.itemDetailsHeader}>QTY</Text>
-          {itemDetails.map((item, index) => {
-            return <Text key={index}>{`${item.quantity} ea`}</Text>;
-          })}
-        </View>
-      </View>
-      {showAdjustInventoryButton && (
-        <Button
-          title={'Adjust Inventory'}
-          buttonStyle={{
-            marginHorizontal: 20,
-            marginTop: 16,
-            backgroundColor: '#043D10',
-            borderRadius: 8,
-          }}
-          titleStyle={{
-            fontSize: 14,
-            fontWeight: 'bold',
-          }}
-          type={'solid'}
-        />
-      )}
-    </View>
-  );
-};
-
-const DispenseItemsExtension = ({itemDetails}) => {
-  return (
-    <View style={styles.itemDetailsLayout}>
-      {itemDetails.map((item, index) => {
-        return (
-          <View
-            key={index}
-            style={{
-              flexDirection: 'row',
-              justifyContent: 'space-evenly',
-              marginBottom: 8,
-            }}>
-            <View>
-              {index === 0 && (
-                <Text style={styles.itemDetailsHeader}>BATCH/LOT NO.</Text>
-              )}
-              <Text style={{fontWeight: 'bold'}}>{item.lotNumber}</Text>
-              <Text style={{color: '#C0C0C0'}}>
-                {new Date(item.expiryDate).toDateString()}
-              </Text>
-            </View>
-            <View style={index != 0 && {alignSelf: 'center'}}>
-              {index === 0 && <Text style={styles.itemDetailsHeader}>QTY</Text>}
-              <Text>{`${item.quantity} ea`}</Text>
-            </View>
-            <View style={{alignSelf: 'center'}}>
-              <Counter />
-            </View>
-          </View>
-        );
-      })}
-    </View>
-  );
-};
-
 /**
  * ItemCard Types:
  * 1 = Inventory
@@ -107,9 +19,8 @@ export const ItemCard = ({
   tagLabelColor,
   price,
   count,
-  details,
   type,
-  showAdjustInventoryButton = false,
+  children,
   defaultCollapsed = true,
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed);
@@ -228,14 +139,14 @@ export const ItemCard = ({
       {!isCollapsed && (
         <>
           <Divider style={{backgroundColor: '#fff', elevation: 2}} />
-
-          {type === 1 && (
+          {children}
+          {/* {type === 1 && (
             <InventoryExtension
               itemDetails={details}
               showAdjustInventoryButton={showAdjustInventoryButton}
             />
           )}
-          {type === 2 && <DispenseItemsExtension itemDetails={details} />}
+          {type === 2 && <DispenseItemsExtension itemDetails={details} />} */}
         </>
       )}
     </Card>

@@ -2,15 +2,17 @@ import React from 'react';
 import {StyleSheet, View, Text} from 'react-native';
 import {Icon, Button} from 'react-native-elements';
 
-export const Counter = ({count, addCount, subtractCount}) => (
+export const Counter = ({count = 0, addCount, subtractCount}) => (
   <View style={styles.container}>
     <Button
-      icon={<Icon name="plus" size={6} color="black" type="font-awesome-5" />}
+      onPress={() => subtractCount()}
+      icon={<Icon name="minus" size={6} color="black" type="font-awesome-5" />}
       buttonStyle={{backgroundColor: '#fff', borderRadius: 40}}
     />
-    <Text style={{width: 50, textAlign: 'center'}}>10</Text>
+    <Text style={{width: 50, textAlign: 'center'}}>{count}</Text>
     <Button
-      icon={<Icon name="minus" size={6} color="black" type="font-awesome-5" />}
+      onPress={() => addCount()}
+      icon={<Icon name="plus" size={6} color="black" type="font-awesome-5" />}
       buttonStyle={{backgroundColor: '#fff', borderRadius: 40}}
     />
   </View>

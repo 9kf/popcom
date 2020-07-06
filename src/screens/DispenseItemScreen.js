@@ -1,16 +1,88 @@
-import React, {useState} from 'react';
+import React, {useState, useContext, useEffect} from 'react';
 
-import {View, Text, StyleSheet, ScrollView} from 'react-native';
+import {View, Text, StyleSheet, ScrollView, RefreshControl} from 'react-native';
 
-import {CustomHeader, ItemCard} from '../components';
+import {CustomHeader, ItemCard, Counter} from '../components';
 
 import {Button} from 'react-native-elements';
 
 import {DispenseCheckoutOverlay} from '../overlays';
 
-const CheckoutCount = ({onPressFunc}) => (
+import {
+  getTagColor,
+  getTagLabelColor,
+  getTotalItemCount,
+} from '../utils/helper';
+import {AuthContext} from '../context';
+import {POPCOM_URL, APP_THEME} from '../utils/constants';
+
+import {MockApiContext} from '../utils/mockAPI';
+import {useFetch} from '../hooks';
+
+const DispenseItemsExtension = ({itemDetails, setItemDetails}) => {
+  const addDispenseCount = index => {
+    setItemDetails(
+      {
+        ...itemDetails[index],
+        dispenseCount: itemDetails[index].dispenseCount + 1,
+      },
+      itemDetails[index].number,
+    );
+  };
+
+  const subTractDispenseCount = index => {
+    if (itemDetails[index].dispenseCount != 0) {
+      setItemDetails(
+        {
+          ...itemDetails[index],
+          dispenseCount: itemDetails[index].dispenseCount - 1,
+        },
+        itemDetails[index].number,
+      );
+    }
+  };
+
+  return (
+    <View style={styles.itemDetailsLayout}>
+      {itemDetails.map((item, index) => {
+        return (
+          <View
+            key={index}
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'space-evenly',
+              marginBottom: 8,
+            }}>
+            <View>
+              {index === 0 && (
+                <Text style={styles.itemDetailsHeader}>BATCH/LOT NO.</Text>
+              )}
+              <Text style={{fontWeight: 'bold'}}>{`LOT#${item.number}`}</Text>
+              <Text style={{color: '#C0C0C0'}}>
+                {`Exp. ${new Date(item.expiry).toLocaleDateString()}`}
+              </Text>
+            </View>
+            <View style={index != 0 && {alignSelf: 'center'}}>
+              {index === 0 && <Text style={styles.itemDetailsHeader}>QTY</Text>}
+              <Text>{`${item.quantity} ea`}</Text>
+            </View>
+            <View style={{alignSelf: 'center'}}>
+              <Counter
+                count={item.dispenseCount}
+                addCount={() => addDispenseCount(index)}
+                subtractCount={() => subTractDispenseCount(index)}
+              />
+            </View>
+          </View>
+        );
+      })}
+    </View>
+  );
+};
+
+const CheckoutCount = ({onPressFunc, count = 0}) => (
   <Button
-    title={'4 Checkout'}
+    title={`${count} Checkout`}
     onPress={() => onPressFunc()}
     buttonStyle={{backgroundColor: '#DAE5E2', borderRadius: 15}}
     titleStyle={{
@@ -24,190 +96,135 @@ const CheckoutCount = ({onPressFunc}) => (
 );
 
 export const DispenseItemScreen = ({navigation}) => {
-  const items = [
-    {
-      title: 'Trust Chocolate Condom',
-      count: 5,
-      tag: 'Male Condom',
-      price: 2500,
-      tagColor: '#D5EAFF',
-      tagLabelColor: '#55AAED',
-      itemDetails: [
-        {
-          lotNumber: '2020-3021',
-          expiryDate: new Date(),
-          quantity: 1000,
-        },
-        {
-          lotNumber: '2020-3021',
-          expiryDate: new Date(),
-          quantity: 1000,
-        },
-        {
-          lotNumber: '2020-3021',
-          expiryDate: new Date(),
-          quantity: 1000,
-        },
-      ],
-    },
-    {
-      title: 'Durex Light Condom',
-      count: 2,
-      tag: 'Male Condom',
-      price: 2600,
-      tagColor: '#D5EAFF',
-      tagLabelColor: '#55AAED',
-      itemDetails: [
-        {
-          lotNumber: '2020-3021',
-          expiryDate: new Date(),
-          quantity: 1000,
-        },
-        {
-          lotNumber: '2020-3021',
-          expiryDate: new Date(),
-          quantity: 1000,
-        },
-        {
-          lotNumber: '2020-3021',
-          expiryDate: new Date(),
-          quantity: 1000,
-        },
-      ],
-    },
-    {
-      title: 'Mango Female Condom',
-      count: 0,
-      tag: 'RHU',
-      price: 1600,
-      tagColor: '#FED7E5',
-      tagLabelColor: '#F288B9',
-      itemDetails: [
-        {
-          lotNumber: '2020-3021',
-          expiryDate: new Date(),
-          quantity: 1000,
-        },
-        {
-          lotNumber: '2020-3021',
-          expiryDate: new Date(),
-          quantity: 1000,
-        },
-        {
-          lotNumber: '2020-3021',
-          expiryDate: new Date(),
-          quantity: 1000,
-        },
-      ],
-    },
-    {
-      title: 'Mercilon - 21 Pills',
-      count: 6,
-      tag: 'Pills',
-      price: 780,
-      tagColor: '#CCFAED',
-      tagLabelColor: '#39CAAD',
-      itemDetails: [
-        {
-          lotNumber: '2020-3021',
-          expiryDate: new Date(),
-          quantity: 1000,
-        },
-        {
-          lotNumber: '2020-3021',
-          expiryDate: new Date(),
-          quantity: 1000,
-        },
-        {
-          lotNumber: '2020-3021',
-          expiryDate: new Date(),
-          quantity: 1000,
-        },
-      ],
-    },
-    {
-      title: 'Marvelon - 28 Pills',
-      count: 6,
-      tag: 'Pills',
-      price: 780,
-      tagColor: '#CCFAED',
-      tagLabelColor: '#39CAAD',
-      itemDetails: [
-        {
-          lotNumber: '2020-3021',
-          expiryDate: new Date(),
-          quantity: 1000,
-        },
-        {
-          lotNumber: '2020-3021',
-          expiryDate: new Date(),
-          quantity: 1000,
-        },
-        {
-          lotNumber: '2020-3021',
-          expiryDate: new Date(),
-          quantity: 1000,
-        },
-      ],
-    },
-    {
-      title: 'D - 35 Pills',
-      count: 6,
-      tag: 'Pills',
-      price: 780,
-      tagColor: '#CCFAED',
-      tagLabelColor: '#39CAAD',
-      itemDetails: [
-        {
-          lotNumber: '2020-3021',
-          expiryDate: new Date(),
-          quantity: 1000,
-        },
-        {
-          lotNumber: '2020-3021',
-          expiryDate: new Date(),
-          quantity: 1000,
-        },
-        {
-          lotNumber: '2020-3021',
-          expiryDate: new Date(),
-          quantity: 1000,
-        },
-      ],
-    },
-  ];
+  const [items, setItems] = useState([]);
+  const {getUser} = useContext(AuthContext);
+  const {api_token} = getUser();
+  const {data, errorMessage, isLoading, fetchData} = useFetch();
+  const {lotNumbers} = useContext(MockApiContext);
 
+  const [stateLotNumbers, setStateLotNumbers] = useState([]);
+  const [totalItemDispenseCount, setTotalItemDispenseCount] = useState(0);
   const [isCheckoutVisible, setIsCheckoutVisible] = useState(false);
+
+  const fetchItems = async () => {
+    const endpoint = `${POPCOM_URL}/api/get-items?api_token=${api_token}`;
+    const options = {
+      headers: {
+        accept: 'application/json',
+      },
+      method: 'post',
+    };
+    fetchData(endpoint, options, () => alert('Failed to get list of items'));
+  };
+
+  const addLotNumberDispenseCountProp = () => {
+    let lotNumbersCopy = [...lotNumbers];
+    lotNumbers.forEach((item, index) => {
+      lotNumbersCopy[index] = {...item, dispenseCount: 0};
+    });
+
+    return lotNumbersCopy;
+  };
+
+  const addItemDispenseCountProp = items => {
+    let itemsCopy = [...items];
+
+    items.forEach((item, index) => {
+      itemsCopy[index] = {...item, totalDispenseCount: 0};
+    });
+
+    return itemsCopy;
+  };
+
+  useEffect(() => {
+    return navigation.addListener('focus', () => {
+      fetchItems();
+      setStateLotNumbers(addLotNumberDispenseCountProp());
+    });
+  }, []);
+
+  useEffect(() => {
+    let itemsCopy = [...items];
+    let nonZeroDispenseCount = 0;
+    items.forEach((item, index) => {
+      const totalDispenseCount = stateLotNumbers
+        .filter(sln => sln.itemId === item.id)
+        .reduce((total, item) => {
+          return total + item.dispenseCount;
+        }, 0);
+
+      itemsCopy[index] = {
+        ...itemsCopy[index],
+        totalDispenseCount: totalDispenseCount,
+      };
+      if (totalDispenseCount > 0) nonZeroDispenseCount++;
+    });
+
+    setTotalItemDispenseCount(nonZeroDispenseCount);
+    setItems(itemsCopy);
+  }, [stateLotNumbers]);
+
+  useEffect(() => {
+    if (data) setItems(addItemDispenseCountProp(data.data));
+  }, [data]);
 
   return (
     <View style={styles.container}>
       <DispenseCheckoutOverlay
         onBackdropPress={() => setIsCheckoutVisible(false)}
         isVisible={isCheckoutVisible}
+        items={items}
+        lotNumbers={stateLotNumbers}
       />
 
       <CustomHeader
         title={'Dispense'}
         LeftComponentFunc={() => navigation.openDrawer()}
         RightComponent={
-          <CheckoutCount onPressFunc={() => setIsCheckoutVisible(true)} />
+          <CheckoutCount
+            count={totalItemDispenseCount}
+            onPressFunc={() => {
+              if (totalItemDispenseCount != 0) setIsCheckoutVisible(true);
+            }}
+          />
         }
       />
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={isLoading}
+            onRefresh={() => fetchItems()}
+          />
+        }>
         {items.map((item, index) => {
           return (
             <ItemCard
-              key={index}
-              title={item.title}
-              count={item.count}
-              navigation={navigation}
-              price={item.price}
-              tag={item.tag}
-              tagColor={item.tagColor}
-              tagLabelColor={item.tagLabelColor}
-              details={item.itemDetails}
-              type={2}
-            />
+              title={item.item_name}
+              price={getTotalItemCount(
+                lotNumbers.filter(num => num.itemId === item.id),
+              )}
+              count={item.totalDispenseCount}
+              tag={item.category}
+              tagColor={getTagColor(item.category)}
+              tagLabelColor={getTagLabelColor(item.category)}
+              showAdjustInventoryButton={true}
+              type={1}>
+              <DispenseItemsExtension
+                itemDetails={stateLotNumbers.filter(
+                  num => num.itemId === item.id,
+                )}
+                setItemDetails={(newItemDetails, i) => {
+                  let lotNumbersCopy = [...stateLotNumbers];
+                  lotNumbersCopy[
+                    stateLotNumbers.findIndex(sln => {
+                      return sln.number === i;
+                    })
+                  ] = newItemDetails;
+                  setStateLotNumbers(lotNumbersCopy);
+                }}
+              />
+            </ItemCard>
           );
         })}
       </ScrollView>
@@ -219,5 +236,17 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F5F9FC',
+  },
+  itemDetailsLayout: {
+    paddingVertical: 10,
+    paddingHorizontal: 0,
+    backgroundColor: '#F1F3F4',
+    borderBottomRightRadius: 8,
+    borderBottomLeftRadius: 8,
+  },
+  itemDetailsHeader: {
+    color: '#C0C0C0',
+    fontSize: 11,
+    marginBottom: 4,
   },
 });

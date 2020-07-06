@@ -14,6 +14,41 @@ import {POPCOM_URL, APP_THEME} from '../utils/constants';
 
 import {MockApiContext} from '../utils/mockAPI';
 
+const ItemExtension = ({itemDetails}) => {
+  return (
+    <View style={styles.itemDetailsLayout}>
+      <View style={{flexDirection: 'row'}}>
+        <View style={{flex: 1, paddingLeft: 12}}>
+          <Text style={styles.itemDetailsHeader}>BATCH/LOT NO.</Text>
+          {itemDetails.map((item, index) => {
+            return (
+              <Text key={index} style={{fontWeight: 'bold'}}>
+                {item.number}
+              </Text>
+            );
+          })}
+        </View>
+        <View style={{flex: 1, alignItems: 'center'}}>
+          <Text style={styles.itemDetailsHeader}>EXPIRY DATE</Text>
+          {itemDetails.map((item, index) => {
+            return (
+              <Text key={index} style={{color: '#C0C0C0'}}>
+                {new Date(item.expiry).toLocaleDateString()}
+              </Text>
+            );
+          })}
+        </View>
+        <View style={{flex: 1, alignItems: 'center'}}>
+          <Text style={styles.itemDetailsHeader}>QTY</Text>
+          {itemDetails.map((item, index) => {
+            return <Text key={index}>{`${item.quantity} ea`}</Text>;
+          })}
+        </View>
+      </View>
+    </View>
+  );
+};
+
 export const ItemScreen = ({route, navigation}) => {
   const {
     category,
@@ -150,9 +185,11 @@ export const ItemScreen = ({route, navigation}) => {
           tag={category}
           tagColor={getTagColor(category)}
           tagLabelColor={getTagLabelColor(category)}
-          details={lotNumbers.filter(num => num.itemId === id)}
-          type={1}
-        />
+          type={1}>
+          <ItemExtension
+            itemDetails={lotNumbers.filter(num => num.itemId === id)}
+          />
+        </ItemCard>
       </ScrollView>
     </View>
   );
@@ -164,4 +201,16 @@ const styles = StyleSheet.create({
     backgroundColor: '#F5F9FC',
   },
   dividerStyle: {color: '#B9BABA', height: 1, marginVertical: 10},
+  itemDetailsLayout: {
+    paddingVertical: 10,
+    paddingHorizontal: 0,
+    backgroundColor: '#F1F3F4',
+    borderBottomRightRadius: 8,
+    borderBottomLeftRadius: 8,
+  },
+  itemDetailsHeader: {
+    color: '#C0C0C0',
+    fontSize: 11,
+    marginBottom: 4,
+  },
 });

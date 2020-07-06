@@ -2,10 +2,11 @@ import React, {useState, useEffect, useContext} from 'react';
 
 import {View, Text, StyleSheet, ScrollView, RefreshControl} from 'react-native';
 
+import {Button} from 'react-native-elements';
+
 import {CustomHeader, ItemCard} from '../components';
 
 import {
-  getUserById,
   getTagColor,
   getTagLabelColor,
   getTotalItemCount,
@@ -15,6 +16,55 @@ import {POPCOM_URL, APP_THEME} from '../utils/constants';
 
 import {MockApiContext} from '../utils/mockAPI';
 import {useFetch} from '../hooks';
+
+const InventoryExtension = ({itemDetails}) => {
+  return (
+    <View style={styles.itemDetailsLayout}>
+      <View style={{flexDirection: 'row'}}>
+        <View style={{flex: 1, paddingLeft: 12}}>
+          <Text style={styles.itemDetailsHeader}>BATCH/LOT NO.</Text>
+          {itemDetails.map((item, index) => {
+            return (
+              <Text key={index} style={{fontWeight: 'bold'}}>
+                {item.number}
+              </Text>
+            );
+          })}
+        </View>
+        <View style={{flex: 1, alignItems: 'center'}}>
+          <Text style={styles.itemDetailsHeader}>EXPIRY DATE</Text>
+          {itemDetails.map((item, index) => {
+            return (
+              <Text key={index} style={{color: '#C0C0C0'}}>
+                {new Date(item.expiry).toLocaleDateString()}
+              </Text>
+            );
+          })}
+        </View>
+        <View style={{flex: 1, alignItems: 'center'}}>
+          <Text style={styles.itemDetailsHeader}>QTY</Text>
+          {itemDetails.map((item, index) => {
+            return <Text key={index}>{`${item.quantity} ea`}</Text>;
+          })}
+        </View>
+      </View>
+      <Button
+        title={'Adjust Inventory'}
+        buttonStyle={{
+          marginHorizontal: 20,
+          marginTop: 16,
+          backgroundColor: APP_THEME.primaryColor,
+          borderRadius: 8,
+        }}
+        titleStyle={{
+          fontSize: 14,
+          fontWeight: 'bold',
+        }}
+        type={'solid'}
+      />
+    </View>
+  );
+};
 
 export const InventoryScreen = ({navigation}) => {
   const [items, setItems] = useState([]);
@@ -68,10 +118,12 @@ export const InventoryScreen = ({navigation}) => {
               tag={item.category}
               tagColor={getTagColor(item.category)}
               tagLabelColor={getTagLabelColor(item.category)}
-              details={lotNumbers.filter(num => num.itemId === item.id)}
               showAdjustInventoryButton={true}
-              type={1}
-            />
+              type={1}>
+              <InventoryExtension
+                itemDetails={lotNumbers.filter(num => num.itemId === item.id)}
+              />
+            </ItemCard>
           );
         })}
       </ScrollView>
@@ -83,5 +135,17 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F5F9FC',
+  },
+  itemDetailsLayout: {
+    paddingVertical: 10,
+    paddingHorizontal: 0,
+    backgroundColor: '#F1F3F4',
+    borderBottomRightRadius: 8,
+    borderBottomLeftRadius: 8,
+  },
+  itemDetailsHeader: {
+    color: '#C0C0C0',
+    fontSize: 11,
+    marginBottom: 4,
   },
 });
