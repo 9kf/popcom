@@ -1,8 +1,20 @@
 import React, {useState, useContext, useEffect} from 'react';
 
-import {View, Text, StyleSheet, ScrollView, RefreshControl} from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  RefreshControl,
+  Picker,
+} from 'react-native';
 
-import {CustomHeader, ItemCard, Counter} from '../components';
+import {
+  CustomHeader,
+  ItemCard,
+  Counter,
+  ErrorHandlingField,
+} from '../components';
 
 import {Button} from 'react-native-elements';
 
@@ -106,6 +118,9 @@ export const DispenseItemScreen = ({navigation}) => {
   const [totalItemDispenseCount, setTotalItemDispenseCount] = useState(0);
   const [isCheckoutVisible, setIsCheckoutVisible] = useState(false);
 
+  const [facilities, setFacilities] = useState([]);
+  const [selectedFacility, setSelectedFacility] = useState('');
+
   const fetchItems = async () => {
     const endpoint = `${POPCOM_URL}/api/get-items?api_token=${api_token}`;
     const options = {
@@ -115,6 +130,19 @@ export const DispenseItemScreen = ({navigation}) => {
       method: 'post',
     };
     fetchData(endpoint, options, () => alert('Failed to get list of items'));
+  };
+
+  const fetchFacilities = async () => {
+    const endpoint = `${POPCOM_URL}/api/get-facilities?api_token=${api_token}`;
+    const request = await fetch(endpoint, {});
+
+    if (!request.ok) {
+      console.log('error');
+      return;
+    }
+
+    const responseJson = await request.json();
+    setFacilities(responseJson.data);
   };
 
   const addLotNumberDispenseCountProp = () => {
@@ -139,6 +167,7 @@ export const DispenseItemScreen = ({navigation}) => {
   useEffect(() => {
     return navigation.addListener('focus', () => {
       fetchItems();
+      fetchFacilities();
       setStateLotNumbers(addLotNumberDispenseCountProp());
     });
   }, []);
@@ -189,6 +218,27 @@ export const DispenseItemScreen = ({navigation}) => {
           />
         }
       />
+
+      <View style={{marginHorizontal: 16, marginBottom: 12}}>
+        <ErrorHandlingField
+          title={'Selected Facility'}
+          style={APP_THEME.inputContainerStyle}>
+          <Picker
+            style={{height: 37}}
+            selectedValue={selectedFacility}
+            onValueChange={(value, index) => setSelectedFacility(value)}
+            mode={'dropdown'}>
+            {facilities.map((item, index) => (
+              <Picker.Item
+                key={index}
+                value={item.id}
+                label={item.facility_name}
+              />
+            ))}
+          </Picker>
+        </ErrorHandlingField>
+      </View>
+
       <ScrollView
         showsVerticalScrollIndicator={false}
         refreshControl={

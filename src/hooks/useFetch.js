@@ -15,7 +15,7 @@ export const useFetch = () => {
     setDefaults();
     try {
       const res = await fetch(url, options);
-      // console.log(res);
+      console.log(res);
       if (!res.ok) {
         errorCallback();
         setError({message: 'Incorrect username or password'});

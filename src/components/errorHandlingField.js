@@ -9,15 +9,17 @@ export const ErrorHandlingField = ({
   children,
 }) => (
   <View style={{flexGrow: 1}}>
-    <Text
-      style={{
-        color: errorMessage ? errorBorderColor : 'gray',
-        fontSize: 10,
-        marginLeft: 4,
-        marginBottom: 2,
-      }}>
-      {title}
-    </Text>
+    {title && (
+      <Text
+        style={{
+          color: errorMessage ? errorBorderColor : 'gray',
+          fontSize: 10,
+          marginLeft: 4,
+          marginBottom: 2,
+        }}>
+        {title}
+      </Text>
+    )}
     <View
       style={
         errorMessage

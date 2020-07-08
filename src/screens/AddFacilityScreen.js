@@ -84,7 +84,6 @@ export const AddFacilityScreen = ({navigation}) => {
   };
 
   const addFacility = async formValues => {
-    console.log(getRequestBodyFromValues(formValues));
     const requestBody = new URLSearchParams(
       getRequestBodyFromValues(formValues),
     );

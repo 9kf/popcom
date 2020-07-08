@@ -1,10 +1,17 @@
 import React, {useState, useEffect, useContext} from 'react';
 
-import {View, Text, StyleSheet, ScrollView, RefreshControl} from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  RefreshControl,
+  Picker,
+} from 'react-native';
 
 import {Button} from 'react-native-elements';
 
-import {CustomHeader, ItemCard} from '../components';
+import {CustomHeader, ItemCard, ErrorHandlingField} from '../components';
 
 import {
   getTagColor,
@@ -66,12 +73,37 @@ const InventoryExtension = ({itemDetails}) => {
   );
 };
 
+const FacilityPicker = ({facilities, selectedFacility, onChangeFacility}) => {
+  return (
+    <View
+      style={{
+        flexGrow: 1,
+        borderWidth: 1,
+        borderRadius: 8,
+        borderColor: '#B7B7B7',
+      }}>
+      <Picker
+        style={{height: 24}}
+        selectedValue={selectedFacility}
+        onValueChange={(value, index) => onChangeFacility(value)}
+        mode={'dropdown'}>
+        {facilities.map((item, index) => (
+          <Picker.Item key={index} value={item.id} label={item.facility_name} />
+        ))}
+      </Picker>
+    </View>
+  );
+};
+
 export const InventoryScreen = ({navigation}) => {
   const [items, setItems] = useState([]);
   const {getUser} = useContext(AuthContext);
   const {api_token} = getUser();
   const {data, errorMessage, isLoading, fetchData} = useFetch();
   const {lotNumbers} = useContext(MockApiContext);
+
+  const [facilities, setFacilities] = useState([]);
+  const [selectedFacility, setSelectedFacility] = useState('');
 
   const fetchItems = async () => {
     const endpoint = `${POPCOM_URL}/api/get-items?api_token=${api_token}`;
@@ -84,9 +116,23 @@ export const InventoryScreen = ({navigation}) => {
     fetchData(endpoint, options, () => alert('Failed to get list of items'));
   };
 
+  const fetchFacilities = async () => {
+    const endpoint = `${POPCOM_URL}/api/get-facilities?api_token=${api_token}`;
+    const request = await fetch(endpoint, {});
+
+    if (!request.ok) {
+      console.log('error');
+      return;
+    }
+
+    const responseJson = await request.json();
+    setFacilities(responseJson.data);
+  };
+
   useEffect(() => {
     return navigation.addListener('focus', () => {
       fetchItems();
+      fetchFacilities();
     });
   }, []);
 
@@ -99,7 +145,15 @@ export const InventoryScreen = ({navigation}) => {
       <CustomHeader
         title={'Inventory'}
         LeftComponentFunc={() => navigation.openDrawer()}
+        RightComponent={
+          <FacilityPicker
+            facilities={facilities}
+            selectedFacility={selectedFacility}
+            onChangeFacility={sf => setSelectedFacility(sf)}
+          />
+        }
       />
+
       <ScrollView
         showsVerticalScrollIndicator={false}
         refreshControl={

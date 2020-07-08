@@ -60,6 +60,7 @@ export const ItemCard = ({
                   style={{
                     ...styles.tagText,
                     color: tagLabelColor,
+                    textTransform: 'capitalize',
                   }}>
                   {tag}
                 </Text>

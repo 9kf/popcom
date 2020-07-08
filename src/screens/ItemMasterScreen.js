@@ -44,6 +44,7 @@ export const ItemMasterScreen = ({navigation}) => {
   useEffect(() => {
     return navigation.addListener('focus', () => {
       fetchItems();
+      console.log(data);
     });
   }, []);
 

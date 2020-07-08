@@ -8,17 +8,32 @@ export const MAPBOX_SEARCH_URL =
 
 export const FACILITY_TYPE = [
   {
+    name: 'Level 1 Hospital',
+    tagColor: '#D5EAFF',
+    tagLabelColor: '#55AAED',
+  },
+  {
+    name: 'Level 2 Hospital',
+    tagColor: '#FDE7E2',
+    tagLabelColor: '#E99480',
+  },
+  {
+    name: 'Level 3 Hospital',
+    tagColor: '#D5EAFF',
+    tagLabelColor: '#55AAED',
+  },
+  {
     name: 'RHU',
     tagColor: '#D5EAFF',
     tagLabelColor: '#55AAED',
   },
   {
-    name: 'MHC',
+    name: 'BHC',
     tagColor: '#FFF2B4',
     tagLabelColor: '#FFD71C',
   },
   {
-    name: 'CHO',
+    name: 'Other Health Facility',
     tagColor: '#CCFAED',
     tagLabelColor: '#39CAAD',
   },
@@ -26,62 +41,62 @@ export const FACILITY_TYPE = [
 
 export const CATEGORIES = [
   {
-    name: 'male condom',
+    name: 'Male Condom',
     tagColor: '#D5EAFF',
     tagLabelColor: '#55AAED',
   },
   {
-    name: 'female condom',
+    name: 'Female Condom',
     tagColor: '#FED7E5',
     tagLabelColor: '#F288B9',
   },
   {
-    name: 'oral contraception',
+    name: 'Oral Contraception',
     tagColor: '#CCFAED',
     tagLabelColor: '#39CAAD',
   },
   {
-    name: 'cap',
+    name: 'Cap',
     tagColor: '#CCFAED',
     tagLabelColor: '#39CAAD',
   },
   {
-    name: 'vaginal douche',
+    name: 'Vaginal Douche',
     tagColor: '#CCFAED',
     tagLabelColor: '#39CAAD',
   },
   {
-    name: 'calendar rhythm method',
+    name: 'Calendar Rhythm Method',
     tagColor: '#CCFAED',
     tagLabelColor: '#39CAAD',
   },
   {
-    name: 'coitus interruption',
+    name: 'Coitus Interruption',
     tagColor: '#CCFAED',
     tagLabelColor: '#39CAAD',
   },
   {
-    name: 'implant',
+    name: 'Implant',
     tagColor: '#CCFAED',
     tagLabelColor: '#39CAAD',
   },
   {
-    name: 'surgical steralization',
+    name: 'Surgical Steralization',
     tagColor: '#CCFAED',
     tagLabelColor: '#39CAAD',
   },
   {
-    name: 'injection',
+    name: 'Injection',
+    tagColor: '#FDE7E2',
+    tagLabelColor: '#E99480',
+  },
+  {
+    name: 'UID',
     tagColor: '#CCFAED',
     tagLabelColor: '#39CAAD',
   },
   {
-    name: 'uid',
-    tagColor: '#CCFAED',
-    tagLabelColor: '#39CAAD',
-  },
-  {
-    name: 'hormonal ring',
+    name: 'Hormonal Ring',
     tagColor: '#CCFAED',
     tagLabelColor: '#39CAAD',
   },

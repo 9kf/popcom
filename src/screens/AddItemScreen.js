@@ -58,11 +58,12 @@ export const AddItemScreen = ({navigation}) => {
   };
 
   const addItem = async formValues => {
-    const newValues = R.assoc(
-      FORM_KEYS.IMAGE,
-      formValues[FORM_KEYS.IMAGE]?.data,
-      formValues,
-    );
+    // const newValues = R.assoc(
+    //   FORM_KEYS.IMAGE,
+    //   formValues[FORM_KEYS.IMAGE]?.data,
+    //   formValues,
+    // );
+    const newValues = R.dissoc(FORM_KEYS.IMAGE, formValues);
     const params = new URLSearchParams(newValues);
     const options = {
       headers: {
@@ -177,7 +178,7 @@ export const AddItemScreen = ({navigation}) => {
               onChangeText={newValue =>
                 onFieldValueChange(FORM_KEYS.ITEM_DESCRIPTION, newValue)
               }
-              style={APP_THEME.defaultInputStyle}
+              style={{...APP_THEME.defaultInputStyle, textAlignVertical: 'top'}}
             />
           </ErrorHandlingField>
         </View>

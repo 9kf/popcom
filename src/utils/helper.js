@@ -2,25 +2,29 @@ import * as R from 'ramda';
 import {CATEGORIES, FACILITY_TYPE, POPCOM_URL} from './constants';
 
 export const getTagColor = categoryName => {
-  const category = CATEGORIES.filter(item => item.name === categoryName)[0];
+  const category = CATEGORIES.filter(
+    item => item.name.toLocaleLowerCase() === categoryName.toLocaleLowerCase(),
+  )[0];
   if (!category) return null;
 
   return category.tagColor;
 };
 
 export const getTagLabelColor = categoryName => {
-  const category = CATEGORIES.filter(item => item.name === categoryName)[0];
+  const category = CATEGORIES.filter(
+    item => item.name.toLocaleLowerCase() === categoryName.toLocaleLowerCase(),
+  )[0];
   if (!category) return null;
 
   return category.tagLabelColor;
 };
 
 export const getFacilityTypeTagColor = type => {
-  return FACILITY_TYPE.filter(item => item.name === type)[0].tagColor;
+  return FACILITY_TYPE.filter(item => item.name === type)[0]?.tagColor;
 };
 
 export const getFacilityTypeTagLabelColor = type => {
-  return FACILITY_TYPE.filter(item => item.name === type)[0].tagLabelColor;
+  return FACILITY_TYPE.filter(item => item.name === type)[0]?.tagLabelColor;
 };
 
 export const debounce = (func, wait, immediate) => {
