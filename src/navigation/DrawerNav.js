@@ -18,6 +18,8 @@ import {
   RequestInventoryScreen,
   PrepareInventoryScreen,
   ReceiveInventoryScreen,
+  addRequestInventoryScreen,
+  AdjustInventoryScreen,
 } from '../screens';
 
 const DrawerNav = createDrawerNavigator();
@@ -48,6 +50,14 @@ export const DrawerNavigation = () => {
         <DrawerNav.Screen
           name="ReceiveInventory"
           component={ReceiveInventoryScreen}
+        />
+        <DrawerNav.Screen
+          name="AddRequestInventory"
+          component={addRequestInventoryScreen}
+        />
+        <DrawerNav.Screen
+          name="AdjustInventory"
+          component={AdjustInventoryScreen}
         />
       </DrawerNav.Navigator>
     </NavigationContainer>

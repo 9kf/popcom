@@ -69,11 +69,27 @@ export const ItemScreen = ({route, navigation}) => {
   const [selectedFacility, setselectedFacility] = useState('');
   const [facilities, setFacilities] = useState([]);
 
+  const [itemBatches, setItemBatches] = useState([]);
+
   useEffect(() => {
     return navigation.addListener('focus', () => {
       console.log(route.params);
     });
   }, []);
+
+  const getItemBatches = async () => {
+    const urlParams = new URLSearchParams({api_token: api_token, item_id: id});
+    const endpoint = `${POPCOM_URL}/api/get-item-batches?${urlParams.toString()}`;
+    const request = await fetch(endpoint, {method: 'post'});
+
+    if (!request.ok) {
+      alert('failed to get batches');
+      return;
+    }
+
+    const response = await request.json();
+    setItemBatches(response.data);
+  };
 
   const getFacilities = async () => {
     const urlParams = new URLSearchParams({api_token});
@@ -98,6 +114,7 @@ export const ItemScreen = ({route, navigation}) => {
   useEffect(() => {
     getUsers();
     getFacilities();
+    getItemBatches();
   }, [route]);
 
   return (
@@ -186,9 +203,7 @@ export const ItemScreen = ({route, navigation}) => {
           tagColor={getTagColor(category)}
           tagLabelColor={getTagLabelColor(category)}
           type={1}>
-          <ItemExtension
-            itemDetails={lotNumbers.filter(num => num.itemId === id)}
-          />
+          <ItemExtension itemDetails={itemBatches} />
         </ItemCard>
       </ScrollView>
     </View>

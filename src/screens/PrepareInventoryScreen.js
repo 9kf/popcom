@@ -9,7 +9,7 @@ export const PrepareInventoryScreen = ({navigation}) => {
   return (
     <View style={styles.container}>
       <CustomHeader
-        title={'Request Inventory'}
+        title={'Prepare Inventory'}
         LeftComponentFunc={() => navigation.openDrawer()}
       />
 

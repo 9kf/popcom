@@ -24,7 +24,7 @@ import {POPCOM_URL, APP_THEME} from '../utils/constants';
 import {MockApiContext} from '../utils/mockAPI';
 import {useFetch} from '../hooks';
 
-const InventoryExtension = ({itemDetails}) => {
+const InventoryExtension = ({itemDetails, navigation, item, facilityId}) => {
   return (
     <View style={styles.itemDetailsLayout}>
       <View style={{flexDirection: 'row'}}>
@@ -68,6 +68,12 @@ const InventoryExtension = ({itemDetails}) => {
           fontWeight: 'bold',
         }}
         type={'solid'}
+        onPress={() => {
+          navigation.navigate('AdjustInventory', {
+            item: item,
+            facility_id: facilityId,
+          });
+        }}
       />
     </View>
   );
@@ -175,6 +181,9 @@ export const InventoryScreen = ({navigation}) => {
               showAdjustInventoryButton={true}
               type={1}>
               <InventoryExtension
+                navigation={navigation}
+                facilityId={selectedFacility}
+                item={item}
                 itemDetails={lotNumbers.filter(num => num.itemId === item.id)}
               />
             </ItemCard>

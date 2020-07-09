@@ -9,7 +9,7 @@ const AddItemButton = ({navigation}) => (
   <Button
     icon={<Icon name="plus" size={16} color="white" type="font-awesome-5" />}
     buttonStyle={{backgroundColor: '#065617', borderRadius: 20}}
-    // onPress={() => navigation.navigate('AddItem')}
+    onPress={() => navigation.navigate('AddRequestInventory')}
   />
 );
 

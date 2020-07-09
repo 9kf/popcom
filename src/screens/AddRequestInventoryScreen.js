@@ -8,11 +8,14 @@ import {
   ScrollView,
   TextInput,
   Picker,
+  TouchableOpacity,
 } from 'react-native';
+
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 import {CustomHeader, ErrorHandlingField, PlaceFinder} from '../components';
 
-import {Button, Icon, Card} from 'react-native-elements';
+import {Button, Icon, Overlay} from 'react-native-elements';
 
 import {AuthContext} from '../context';
 
@@ -36,6 +39,38 @@ const FORM_KEYS = {
   FACILITY_TYPE: 'facility_type',
   FACILITY_STATUS: 'facility_status',
   API_TOKEN: 'api_token',
+};
+
+const ItemsOverlay = ({
+  isOpen,
+  setIsOpen,
+  items,
+  selectedItems,
+  setSelectedItems,
+}) => {
+  const handleOnTouch = itemName => {
+    setSelectedItems([...selectedItems, {itemName: itemName, quantity: '0'}]);
+    setIsOpen(false);
+  };
+
+  return (
+    <Overlay
+      overlayStyle={APP_THEME.defaultOverlayStyle}
+      isVisible={isOpen}
+      onBackdropPress={() => setIsOpen(false)}>
+      <View>
+        {items.map(item => {
+          return (
+            <TouchableOpacity onPress={() => handleOnTouch(item.item_name)}>
+              <View style={{paddingHorizontal: 10, marginVertical: 8}}>
+                <Text>{item.item_name}</Text>
+              </View>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+    </Overlay>
+  );
 };
 
 export const addRequestInventoryScreen = ({navigation}) => {
@@ -110,16 +145,94 @@ export const addRequestInventoryScreen = ({navigation}) => {
     }
   }, [data]);
 
+  const [items, setItems] = useState([]);
+  const [selectedItems, setSelectedItems] = useState([]);
+  const [isItemPickerOpen, setIsItemPickerOpen] = useState(false);
+
+  const [facilities, setFacilities] = useState([]);
+  const [requestingFacility, setRequestingFacility] = useState(null);
+  const [supplyingFacility, setSupplyingFacility] = useState(null);
+
+  const [deliveryDate, setRequestedDeliveryDate] = useState(new Date());
+  const [isDatePickerVisible, setIsDatePickerVisible] = useState(false);
+
+  const onDateChange = (event, selectedDate) => {
+    setRequestedDeliveryDate(selectedDate);
+    setIsDatePickerVisible(false);
+  };
+
+  const getFacilities = async () => {
+    const endpoint = `${POPCOM_URL}/api/get-facilities?api_token=${api_token}`;
+    const request = await fetch(endpoint);
+    console.log(request);
+    if (!request.ok) {
+      alert('failed to get facilities');
+      return;
+    }
+
+    const response = await request.json();
+    setFacilities(response.data);
+  };
+
+  const getItems = async () => {
+    const endpoint = `${POPCOM_URL}/api/get-items?api_token=${api_token}`;
+    const options = {
+      headers: {
+        accept: 'application/json',
+      },
+      method: 'post',
+    };
+
+    const request = await fetch(endpoint, options);
+
+    if (!request.ok) {
+      alert('failed to get items');
+      return;
+    }
+
+    const response = await request.json();
+    setItems(response.data);
+  };
+
+  useEffect(() => {
+    return navigation.addListener('focus', () => {
+      getFacilities();
+      getItems();
+    });
+  }, []);
+
   return (
     <View style={styles.container}>
       <CustomHeader
         LeftComponentFunc={() => {
           resetForm();
-          navigation.navigate('Facilities');
+          navigation.navigate('RequestInventory');
         }}
         title={'Create Request Inventory'}
         type={1}
       />
+
+      {isDatePickerVisible && (
+        <DateTimePicker
+          value={deliveryDate}
+          mode={'date'}
+          is24Hour={true}
+          display="default"
+          onChange={onDateChange}
+          onTouchCancel={() => setIsDatePickerVisible(false)}
+        />
+      )}
+
+      {
+        <ItemsOverlay
+          isOpen={isItemPickerOpen}
+          setIsOpen={setIsItemPickerOpen}
+          items={items}
+          selectedItems={selectedItems}
+          setSelectedItems={setSelectedItems}
+        />
+      }
+
       <ScrollView showsVerticalScrollIndicator={false}>
         <View
           style={{
@@ -140,66 +253,176 @@ export const addRequestInventoryScreen = ({navigation}) => {
 
           <ErrorHandlingField
             title={'Requesting Facility'}
-            errorMessage={errors[FORM_KEYS.FACILITY_TYPE]}
             style={APP_THEME.inputContainerStyle}>
             <Picker
               style={{height: 37}}
-              selectedValue={formValues[FORM_KEYS.FACILITY_TYPE]}
-              onValueChange={(value, index) =>
-                onFieldValueChange(FORM_KEYS.FACILITY_TYPE, value)
-              }
+              //   selectedValue={formValues[FORM_KEYS.FACILITY_TYPE]}
+              //   onValueChange={(value, index) =>
+              //     onFieldValueChange(FORM_KEYS.FACILITY_TYPE, value)
+              //   }
               mode={'dropdown'}>
-              {FACILITY_TYPE.map((item, index) => (
-                <Picker.Item key={index} value={item.name} label={item.name} />
+              {facilities.map((item, index) => (
+                <Picker.Item
+                  key={index}
+                  value={item.facility_name}
+                  label={item.facility_name}
+                />
               ))}
             </Picker>
           </ErrorHandlingField>
 
           <ErrorHandlingField
             title={'Supplying Facility'}
-            errorMessage={errors[FORM_KEYS.FACILITY_TYPE]}
             style={APP_THEME.inputContainerStyle}>
             <Picker
               style={{height: 37}}
-              selectedValue={formValues[FORM_KEYS.FACILITY_TYPE]}
-              onValueChange={(value, index) =>
-                onFieldValueChange(FORM_KEYS.FACILITY_TYPE, value)
-              }
+              //   selectedValue={formValues[FORM_KEYS.FACILITY_TYPE]}
+              //   onValueChange={(value, index) =>
+              //     onFieldValueChange(FORM_KEYS.FACILITY_TYPE, value)
+              //   }
               mode={'dropdown'}>
-              {FACILITY_TYPE.map((item, index) => (
-                <Picker.Item key={index} value={item.name} label={item.name} />
+              {facilities.map((item, index) => (
+                <Picker.Item
+                  key={index}
+                  value={item.facility_name}
+                  label={item.facility_name}
+                />
               ))}
             </Picker>
           </ErrorHandlingField>
 
-          <View style={{flexDirection: 'row'}}>
+          <TouchableOpacity onPress={() => setIsDatePickerVisible(true)}>
             <ErrorHandlingField
-              title={'Province'}
-              style={APP_THEME.inputContainerStyle}
-              errorMessage={errors[FORM_KEYS.PROVINCE]}>
+              title={'Requested Delivery Date'}
+              style={{
+                ...APP_THEME.inputContainerStyle,
+                flexDirection: 'row',
+                alignItems: 'center',
+              }}>
               <TextInput
-                value={formValues[FORM_KEYS.ADDRESS]?.context[1].text}
+                style={{...APP_THEME.defaultInputStyle, flexGrow: 1}}
                 editable={false}
-                style={{...APP_THEME.defaultInputStyle, color: 'black'}}
+                value={deliveryDate.toDateString()}
+              />
+              <Icon
+                name="pen-square"
+                size={16}
+                color="black"
+                type="font-awesome-5"
+                containerStyle={{marginRight: 12}}
               />
             </ErrorHandlingField>
+          </TouchableOpacity>
+        </View>
 
-            <View style={{padding: 8}} />
-
-            <ErrorHandlingField
-              title={'Region'}
-              style={APP_THEME.inputContainerStyle}
-              errorMessage={errors[FORM_KEYS.REGION]}>
-              <TextInput
-                value={formValues[FORM_KEYS.REGION]}
-                keyboardType={'numeric'}
-                onChangeText={newValue =>
-                  onFieldValueChange(FORM_KEYS.REGION, newValue)
-                }
-                style={APP_THEME.defaultInputStyle}
-              />
-            </ErrorHandlingField>
+        <View
+          style={{
+            marginHorizontal: 20,
+            marginTop: 20,
+          }}>
+          <View style={{flexDirection: 'row', marginBottom: 12}}>
+            <Icon
+              name="shopping-cart"
+              type="font-awesome-5"
+              color={'#333333'}
+              size={16}
+            />
+            <Text style={{color: '#333333', marginLeft: 12, fontSize: 12}}>
+              Requested Items
+            </Text>
           </View>
+
+          <Button
+            title={'Select Items'}
+            buttonStyle={{
+              backgroundColor: '#043D10',
+              borderRadius: 6,
+              marginHorizontal: 20,
+            }}
+            containerStyle={{marginBottom: 12}}
+            onPress={() => setIsItemPickerOpen(true)}
+          />
+
+          <View>
+            {selectedItems.length != 0 && (
+              <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                <Text style={{color: 'gray'}}>ITEM</Text>
+                <View style={{flexGrow: 1}} />
+                <Text style={{color: 'gray'}}>QTY</Text>
+
+                <Icon
+                  name="pen-square"
+                  size={20}
+                  color="white"
+                  type="font-awesome-5"
+                  containerStyle={{marginLeft: 12}}
+                />
+              </View>
+            )}
+
+            {selectedItems.map((item, index) => {
+              return (
+                <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                  <Text>{item.itemName}</Text>
+                  <View style={{flexGrow: 1}} />
+
+                  <TextInput
+                    keyboardType={'numeric'}
+                    onChangeText={newText => {
+                      const newValues = [...selectedItems];
+                      (newValues[index] = {
+                        ...selectedItems[index],
+                        quantity: newText,
+                      }),
+                        setSelectedItems(newValues);
+                    }}
+                    style={{height: 37}}
+                    value={item.quantity}
+                  />
+                  <Icon
+                    name="times"
+                    size={20}
+                    color="red"
+                    type="font-awesome-5"
+                    containerStyle={{marginLeft: 12}}
+                    onPress={() => {
+                      const newValues = R.remove(index, 1, selectedItems);
+                      setSelectedItems(newValues);
+                    }}
+                  />
+                </View>
+              );
+            })}
+          </View>
+        </View>
+
+        <View style={{marginHorizontal: 20, marginTop: 40}}>
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              marginBottom: 4,
+            }}>
+            <Icon
+              name="pen-square"
+              size={16}
+              color="black"
+              type="font-awesome-5"
+              containerStyle={{marginRight: 12}}
+            />
+            <Text style={{fontWeight: 'bold', fontSize: 16}}>Notes</Text>
+          </View>
+
+          <TextInput
+            placeholder={'Type something...'}
+            numberOfLines={5}
+            style={{
+              backgroundColor: '#EBEBEB',
+              borderRadius: 8,
+              textAlignVertical: 'top',
+              marginBottom: 12,
+            }}
+          />
         </View>
 
         <Button

@@ -13,3 +13,5 @@ export * from './ItemScreen';
 export * from './RequestInventoryScreen';
 export * from './PrepareInventoryScreen';
 export * from './ReceiveInventoryScreen';
+export * from './AddRequestInventoryScreen';
+export * from './AdjustInventoryScreen';
