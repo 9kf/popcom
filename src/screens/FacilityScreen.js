@@ -6,7 +6,7 @@ import {Divider} from 'react-native-elements';
 import MapView, {PROVIDER_GOOGLE, Marker} from 'react-native-maps';
 
 import {AuthContext} from '../context';
-import {getUserById} from '../utils/helper';
+import {getUsers, getUserById} from '../utils/helper';
 
 export const FacilityScreen = ({route, navigation}) => {
   const {
@@ -19,7 +19,6 @@ export const FacilityScreen = ({route, navigation}) => {
     longitude,
     province,
     region,
-    user_id,
   } = route.params;
 
   const {getUser} = useContext(AuthContext);
@@ -30,11 +29,14 @@ export const FacilityScreen = ({route, navigation}) => {
 
   let mapRef = useRef(null);
 
-  const getUsers = async () => {
+  const getUsersData = async () => {
     const createdBy = await getUserById(created_by, api_token);
     setCreatedByUser(createdBy.data.first_name);
-    const userRepresentative = await getUserById(user_id, api_token);
-    setRepresentative(userRepresentative.data);
+    const users = await getUsers(api_token);
+    const userRepresentative = users.data.filter(
+      user => user.facility_id === id,
+    )[0];
+    setRepresentative(userRepresentative);
   };
 
   const clearData = () => {
@@ -43,7 +45,7 @@ export const FacilityScreen = ({route, navigation}) => {
   };
 
   useEffect(() => {
-    getUsers();
+    getUsersData();
   }, [route]);
 
   return (
@@ -71,9 +73,11 @@ export const FacilityScreen = ({route, navigation}) => {
           <Text style={{color: '#B9BABA', fontSize: 16}}>ACCOUNT</Text>
           <InfoBlock
             header={'Complete Name'}
-            subHeader={`${representative.first_name} ${
-              representative.last_name
-            }`}
+            subHeader={
+              representative
+                ? `${representative.first_name} ${representative.last_name}`
+                : ''
+            }
             iconName={'user-alt'}
             containerStyle={{
               marginLeft: 12,
@@ -83,7 +87,7 @@ export const FacilityScreen = ({route, navigation}) => {
 
           <InfoBlock
             header={'Role / Rank'}
-            subHeader={`Facility ${representative.roles}`}
+            subHeader={representative ? `Facility ${representative.roles}` : ''}
             iconName={'ribbon'}
             containerStyle={{
               marginLeft: 12,
@@ -93,7 +97,7 @@ export const FacilityScreen = ({route, navigation}) => {
 
           <InfoBlock
             header={'Email / Username'}
-            subHeader={representative.email}
+            subHeader={representative ? representative.email : ''}
             iconName={'envelope-square'}
             containerStyle={{
               marginLeft: 12,

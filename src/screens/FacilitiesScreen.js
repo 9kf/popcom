@@ -47,7 +47,6 @@ export const FacilitiesScreen = ({navigation}) => {
   useEffect(() => {
     if (data) {
       setFacilities(data.data);
-      console.log(data);
     }
   }, [data]);
 

@@ -110,6 +110,7 @@ export const HomeScreen = ({navigation}) => {
                 size={42}
                 color="#E17055"
                 style={{marginBottom: 4}}
+                onPress={() => navigation.navigate('RequestInventory')}
               />
               <Text
                 style={{fontSize: 12, color: '#E17055', alignSelf: 'center'}}>
@@ -130,6 +131,7 @@ export const HomeScreen = ({navigation}) => {
                 size={42}
                 color="#E84393"
                 style={{marginBottom: 4}}
+                onPress={() => navigation.navigate('ReceiveInventory')}
               />
               <Text
                 style={{fontSize: 12, color: '#E84393', alignSelf: 'center'}}>

@@ -1,5 +1,5 @@
 import React, {useState} from 'react';
-import {StyleSheet, View, Text} from 'react-native';
+import {StyleSheet, View, Text, TouchableHighlight} from 'react-native';
 import {Icon, Card, Divider, Button} from 'react-native-elements';
 
 /**
@@ -27,22 +27,79 @@ export const ItemCard = ({
 
   return (
     <Card containerStyle={styles.container}>
-      <View style={styles.cardLayout}>
-        <View style={{width: '65%'}}>
-          <Text style={styles.title}>{title}</Text>
-          {type === 3 ? (
-            <View style={{...styles.tags, alignItems: 'center'}}>
-              <Icon
-                name="map-marker-alt"
-                type="font-awesome-5"
-                color={'#B3B3B3'}
-                size={12}
-                style={{marginRight: 4}}
-              />
-              <Text style={{fontSize: 10, color: '#B3B3B3'}}>{price}</Text>
+      <TouchableHighlight
+        onPress={() => {
+          if (type === 3 || type === 5) {
+            nextFunc();
+            return;
+          }
+
+          setIsCollapsed(!isCollapsed);
+        }}
+        underlayColor={'#F5F5F5'}>
+        <>
+          <View style={styles.cardLayout}>
+            <View style={{width: '65%'}}>
+              <Text style={styles.title}>{title}</Text>
+              {type === 3 ? (
+                <View style={{...styles.tags, alignItems: 'center'}}>
+                  <Icon
+                    name="map-marker-alt"
+                    type="font-awesome-5"
+                    color={'#B3B3B3'}
+                    size={12}
+                    style={{marginRight: 4}}
+                  />
+                  <Text style={{fontSize: 10, color: '#B3B3B3'}}>{price}</Text>
+                </View>
+              ) : (
+                <View style={styles.tags}>
+                  <View
+                    style={{
+                      ...styles.tagStyle,
+                      backgroundColor: tagColor,
+                      marginRight: 4,
+                    }}>
+                    <Icon
+                      name="edit"
+                      type="font-awesome-5"
+                      color={tagLabelColor}
+                      size={8}
+                      style={{marginRight: 4}}
+                    />
+                    <Text
+                      style={{
+                        ...styles.tagText,
+                        color: tagLabelColor,
+                        textTransform: 'capitalize',
+                      }}>
+                      {tag}
+                    </Text>
+                  </View>
+
+                  {type != 5 && (
+                    <View
+                      style={{
+                        ...styles.tagStyle,
+                        backgroundColor: '#D9D9D9',
+                      }}>
+                      <Icon
+                        name="shopping-cart"
+                        type="font-awesome-5"
+                        color="gray"
+                        size={8}
+                        style={{marginRight: 4}}
+                      />
+                      <Text style={styles.tagText}>{`${price} ea`}</Text>
+                    </View>
+                  )}
+                </View>
+              )}
             </View>
-          ) : (
-            <View style={styles.tags}>
+
+            <View style={{flexGrow: 1}} />
+
+            {type === 3 && (
               <View
                 style={{
                   ...styles.tagStyle,
@@ -60,96 +117,48 @@ export const ItemCard = ({
                   style={{
                     ...styles.tagText,
                     color: tagLabelColor,
-                    textTransform: 'capitalize',
+                    width: 50,
                   }}>
                   {tag}
                 </Text>
               </View>
+            )}
 
-              {type != 5 && (
-                <View
-                  style={{
-                    ...styles.tagStyle,
-                    backgroundColor: '#D9D9D9',
-                  }}>
-                  <Icon
-                    name="shopping-cart"
-                    type="font-awesome-5"
-                    color="gray"
-                    size={8}
-                    style={{marginRight: 4}}
-                  />
-                  <Text style={styles.tagText}>{`${price} ea`}</Text>
-                </View>
-              )}
-            </View>
+            {type != 3 && type != 5 && (
+              <Text style={styles.count}>{count}</Text>
+            )}
+
+            {type === 3 || type === 5 ? (
+              <View style={{marginLeft: 4}}>
+                <Icon
+                  name={'chevron-right'}
+                  type="font-awesome-5"
+                  color="#D9D9D9"
+                  size={18}
+                  // onPress={() => nextFunc()}
+                />
+              </View>
+            ) : (
+              <View>
+                <Icon
+                  name={isCollapsed ? 'chevron-down' : 'chevron-up'}
+                  type="font-awesome-5"
+                  color="#D9D9D9"
+                  // onPress={() => setIsCollapsed(!isCollapsed)}
+                  size={18}
+                />
+              </View>
+            )}
+          </View>
+
+          {!isCollapsed && (
+            <>
+              <Divider style={{backgroundColor: '#fff', elevation: 2}} />
+              {children}
+            </>
           )}
-        </View>
-
-        <View style={{flexGrow: 1}} />
-
-        {type === 3 && (
-          <View
-            style={{
-              ...styles.tagStyle,
-              backgroundColor: tagColor,
-              marginRight: 4,
-            }}>
-            <Icon
-              name="edit"
-              type="font-awesome-5"
-              color={tagLabelColor}
-              size={8}
-              style={{marginRight: 4}}
-            />
-            <Text
-              style={{
-                ...styles.tagText,
-                color: tagLabelColor,
-              }}>
-              {tag}
-            </Text>
-          </View>
-        )}
-
-        {type != 3 && type != 5 && <Text style={styles.count}>{count}</Text>}
-
-        {type === 3 || type === 5 ? (
-          <View style={{marginLeft: 12}}>
-            <Icon
-              name={'chevron-right'}
-              type="font-awesome-5"
-              color="#D9D9D9"
-              size={18}
-              onPress={() => nextFunc()}
-            />
-          </View>
-        ) : (
-          <View>
-            <Icon
-              name={isCollapsed ? 'chevron-down' : 'chevron-up'}
-              type="font-awesome-5"
-              color="#D9D9D9"
-              onPress={() => setIsCollapsed(!isCollapsed)}
-              size={18}
-            />
-          </View>
-        )}
-      </View>
-
-      {!isCollapsed && (
-        <>
-          <Divider style={{backgroundColor: '#fff', elevation: 2}} />
-          {children}
-          {/* {type === 1 && (
-            <InventoryExtension
-              itemDetails={details}
-              showAdjustInventoryButton={showAdjustInventoryButton}
-            />
-          )}
-          {type === 2 && <DispenseItemsExtension itemDetails={details} />} */}
         </>
-      )}
+      </TouchableHighlight>
     </Card>
   );
 };
@@ -188,7 +197,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   tagText: {
-    fontSize: 10,
+    fontSize: 8,
     fontWeight: 'bold',
     color: 'gray',
   },

@@ -65,6 +65,24 @@ export const getUserById = async (userID, apiToken) => {
   return await request.json();
 };
 
+export const getUsers = async apiToken => {
+  const endpoint = `${POPCOM_URL}/api/get-users?api_token=${apiToken}`;
+  const options = {
+    headers: {
+      accept: 'application/json',
+    },
+    method: 'post',
+  };
+  const request = await fetch(endpoint, options);
+
+  if (!request.ok) {
+    alert('failed to get users');
+    return;
+  }
+
+  return await request.json();
+};
+
 export const getTotalItemCount = lotNumbers => {
   return lotNumbers.reduce((total, item) => {
     return total + item.quantity;

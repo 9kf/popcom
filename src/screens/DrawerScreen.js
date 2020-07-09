@@ -39,12 +39,17 @@ export const DrawerScreen = props => {
     },
     {
       iconName: 'truck',
-      pressFunction: () => console.log('to be implemented'),
+      pressFunction: () => props.navigation.navigate('RequestInventory'),
       label: 'Request Inventory',
     },
     {
+      iconName: 'shopping-basket',
+      pressFunction: () => props.navigation.navigate('PrepareInventory'),
+      label: 'Prepare Inventory',
+    },
+    {
       iconName: 'truck-loading',
-      pressFunction: () => console.log('to be implemented'),
+      pressFunction: () => props.navigation.navigate('ReceiveInventory'),
       label: 'Receive Inventory',
     },
     {
@@ -70,7 +75,7 @@ export const DrawerScreen = props => {
 
       <DrawerContentScrollView {...props} showsVerticalScrollIndicator={false}>
         <View style={{flex: 1}}>
-          {drawerItems.splice(0, drawerItems.length - 4).map((item, index) => {
+          {drawerItems.splice(0, drawerItems.length - 5).map((item, index) => {
             return (
               <DrawerItem
                 key={index}

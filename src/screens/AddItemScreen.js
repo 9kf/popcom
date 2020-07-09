@@ -8,6 +8,7 @@ import {
   ScrollView,
   TextInput,
   Picker,
+  Platform,
 } from 'react-native';
 
 import {
@@ -55,6 +56,25 @@ export const AddItemScreen = ({navigation}) => {
 
     console.log(errors);
     return errors;
+  };
+
+  const createFormData = (image, body) => {
+    const data = new FormData();
+
+    data.append('photo', {
+      name: image.fileName,
+      type: image.type,
+      uri:
+        Platform.OS === 'android'
+          ? image.uri
+          : image.uri.replace('file://', ''),
+    });
+
+    Object.keys(body).forEach(key => {
+      data.append(key, body[key]);
+    });
+
+    return data;
   };
 
   const addItem = async formValues => {
