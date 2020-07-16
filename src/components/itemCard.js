@@ -117,7 +117,7 @@ export const ItemCard = ({
                   style={{
                     ...styles.tagText,
                     color: tagLabelColor,
-                    width: 50,
+                    maxWidth: 50,
                   }}>
                   {tag}
                 </Text>

@@ -2,82 +2,21 @@ import React, {useState, useEffect, useContext} from 'react';
 
 import {
   View,
-  Text,
   StyleSheet,
   ScrollView,
   RefreshControl,
   Picker,
 } from 'react-native';
 
-import {Button} from 'react-native-elements';
+import {CustomHeader, ItemCard, InventoryExtension} from '../components';
 
-import {CustomHeader, ItemCard, ErrorHandlingField} from '../components';
-
-import {
-  getTagColor,
-  getTagLabelColor,
-  getTotalItemCount,
-} from '../utils/helper';
+import {getTagColor, getTagLabelColor} from '../utils/helper';
 import {AuthContext} from '../context';
-import {POPCOM_URL, APP_THEME} from '../utils/constants';
+import {POPCOM_URL} from '../utils/constants';
 
-import {MockApiContext} from '../utils/mockAPI';
 import {useFetch} from '../hooks';
 
-const InventoryExtension = ({itemDetails, navigation, item, facilityId}) => {
-  return (
-    <View style={styles.itemDetailsLayout}>
-      <View style={{flexDirection: 'row'}}>
-        <View style={{flex: 1, paddingLeft: 12}}>
-          <Text style={styles.itemDetailsHeader}>BATCH/LOT NO.</Text>
-          {itemDetails.map((item, index) => {
-            return (
-              <Text key={index} style={{fontWeight: 'bold'}}>
-                {item.number}
-              </Text>
-            );
-          })}
-        </View>
-        <View style={{flex: 1, alignItems: 'center'}}>
-          <Text style={styles.itemDetailsHeader}>EXPIRY DATE</Text>
-          {itemDetails.map((item, index) => {
-            return (
-              <Text key={index} style={{color: '#C0C0C0'}}>
-                {new Date(item.expiry).toLocaleDateString()}
-              </Text>
-            );
-          })}
-        </View>
-        <View style={{flex: 1, alignItems: 'center'}}>
-          <Text style={styles.itemDetailsHeader}>QTY</Text>
-          {itemDetails.map((item, index) => {
-            return <Text key={index}>{`${item.quantity} ea`}</Text>;
-          })}
-        </View>
-      </View>
-      <Button
-        title={'Adjust Inventory'}
-        buttonStyle={{
-          marginHorizontal: 20,
-          marginTop: 16,
-          backgroundColor: APP_THEME.primaryColor,
-          borderRadius: 8,
-        }}
-        titleStyle={{
-          fontSize: 14,
-          fontWeight: 'bold',
-        }}
-        type={'solid'}
-        onPress={() => {
-          navigation.navigate('AdjustInventory', {
-            item: item,
-            facility_id: facilityId,
-          });
-        }}
-      />
-    </View>
-  );
-};
+let lastSelectedFacility = 0;
 
 const FacilityPicker = ({facilities, selectedFacility, onChangeFacility}) => {
   return (
@@ -106,10 +45,11 @@ export const InventoryScreen = ({navigation}) => {
   const {getUser} = useContext(AuthContext);
   const {api_token} = getUser();
   const {data, errorMessage, isLoading, fetchData} = useFetch();
-  const {lotNumbers} = useContext(MockApiContext);
 
   const [facilities, setFacilities] = useState([]);
   const [selectedFacility, setSelectedFacility] = useState('');
+
+  const [batches, setBatches] = useState([]);
 
   const fetchItems = async () => {
     const endpoint = `${POPCOM_URL}/api/get-items?api_token=${api_token}`;
@@ -127,7 +67,7 @@ export const InventoryScreen = ({navigation}) => {
     const request = await fetch(endpoint, {});
 
     if (!request.ok) {
-      console.log('error');
+      console.log('there was a problem fetching the facilities');
       return;
     }
 
@@ -135,16 +75,44 @@ export const InventoryScreen = ({navigation}) => {
     setFacilities(responseJson.data);
   };
 
+  const getFacilityBatchById = async facilityId => {
+    const body = {
+      api_token: api_token,
+      facility_id: facilityId,
+    };
+    const endpoint = `${POPCOM_URL}/api/get-facility-batches`;
+    const request = await fetch(endpoint, {
+      method: 'post',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    });
+
+    if (!request.ok) {
+      alert('there was a problem fetching the facility batches');
+      return;
+    }
+
+    const response = await request.json();
+    setBatches(response.data);
+  };
+
   useEffect(() => {
     return navigation.addListener('focus', () => {
       fetchItems();
-      fetchFacilities();
+      fetchFacilities().then(() => getFacilityBatchById(lastSelectedFacility));
     });
   }, []);
 
   useEffect(() => {
     if (data) setItems(data.data);
   }, [data]);
+
+  useEffect(() => {
+    getFacilityBatchById(selectedFacility);
+  }, [selectedFacility]);
 
   return (
     <View style={styles.container}>
@@ -155,7 +123,10 @@ export const InventoryScreen = ({navigation}) => {
           <FacilityPicker
             facilities={facilities}
             selectedFacility={selectedFacility}
-            onChangeFacility={sf => setSelectedFacility(sf)}
+            onChangeFacility={sf => {
+              setSelectedFacility(sf);
+              if (sf != '') lastSelectedFacility = sf;
+            }}
           />
         }
       />
@@ -172,9 +143,11 @@ export const InventoryScreen = ({navigation}) => {
           return (
             <ItemCard
               title={item.item_name}
-              price={getTotalItemCount(
-                lotNumbers.filter(num => num.itemId === item.id),
-              )}
+              price={batches
+                .filter(batch => batch.item.id === item.id)
+                .reduce((total, item) => {
+                  return total + item.quantity;
+                }, 0)}
               tag={item.category}
               tagColor={getTagColor(item.category)}
               tagLabelColor={getTagLabelColor(item.category)}
@@ -184,7 +157,7 @@ export const InventoryScreen = ({navigation}) => {
                 navigation={navigation}
                 facilityId={selectedFacility}
                 item={item}
-                itemDetails={lotNumbers.filter(num => num.itemId === item.id)}
+                itemDetails={batches.filter(batch => batch.item.id === item.id)}
               />
             </ItemCard>
           );
@@ -198,17 +171,5 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F5F9FC',
-  },
-  itemDetailsLayout: {
-    paddingVertical: 10,
-    paddingHorizontal: 0,
-    backgroundColor: '#F1F3F4',
-    borderBottomRightRadius: 8,
-    borderBottomLeftRadius: 8,
-  },
-  itemDetailsHeader: {
-    color: '#C0C0C0',
-    fontSize: 11,
-    marginBottom: 4,
   },
 });

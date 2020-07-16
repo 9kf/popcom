@@ -23,7 +23,7 @@ const ItemExtension = ({itemDetails}) => {
           {itemDetails.map((item, index) => {
             return (
               <Text key={index} style={{fontWeight: 'bold'}}>
-                {item.number}
+                {item.batch_name}
               </Text>
             );
           })}
@@ -33,7 +33,9 @@ const ItemExtension = ({itemDetails}) => {
           {itemDetails.map((item, index) => {
             return (
               <Text key={index} style={{color: '#C0C0C0'}}>
-                {new Date(item.expiry).toLocaleDateString()}
+                {new Date(
+                  item.expiration_date.split(' ')[0],
+                ).toLocaleDateString()}
               </Text>
             );
           })}
@@ -71,16 +73,19 @@ export const ItemScreen = ({route, navigation}) => {
 
   const [itemBatches, setItemBatches] = useState([]);
 
-  useEffect(() => {
-    return navigation.addListener('focus', () => {
-      console.log(route.params);
+  const getFacilityBatches = async () => {
+    const endpoint = `${POPCOM_URL}/api/get-facility-batches`;
+    const request = await fetch(endpoint, {
+      method: 'post',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        api_token: api_token,
+        facility_id: selectedFacility,
+      }),
     });
-  }, []);
-
-  const getItemBatches = async () => {
-    const urlParams = new URLSearchParams({api_token: api_token, item_id: id});
-    const endpoint = `${POPCOM_URL}/api/get-item-batches?${urlParams.toString()}`;
-    const request = await fetch(endpoint, {method: 'post'});
 
     if (!request.ok) {
       alert('failed to get batches');
@@ -88,7 +93,8 @@ export const ItemScreen = ({route, navigation}) => {
     }
 
     const response = await request.json();
-    setItemBatches(response.data);
+    const itemBatch = response.data.filter(data => data.item.id === id);
+    setItemBatches(itemBatch);
   };
 
   const getFacilities = async () => {
@@ -113,9 +119,14 @@ export const ItemScreen = ({route, navigation}) => {
 
   useEffect(() => {
     getUsers();
-    getFacilities();
-    getItemBatches();
+    getFacilities().then(() => {
+      if (selectedFacility != '') getFacilityBatches();
+    });
   }, [route]);
+
+  useEffect(() => {
+    getFacilityBatches();
+  }, [selectedFacility]);
 
   return (
     <View style={styles.container}>

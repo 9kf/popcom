@@ -1,16 +1,42 @@
-import React, {useContext} from 'react';
+import React, {useContext, useState} from 'react';
 import {View, Text, ScrollView, TextInput, StyleSheet} from 'react-native';
 import {Overlay, Button, Icon, Divider} from 'react-native-elements';
 import {APP_THEME} from '../utils/constants';
 import PropTypes from 'prop-types';
 import {AuthContext} from '../context';
 import {getTagColor, getTagLabelColor} from '../utils/helper';
+import {adjustInventory} from '../utils/api';
 
 export const DispenseCheckoutOverlay = props => {
   const {getUser} = useContext(AuthContext);
   const {api_token, first_name, last_name} = getUser();
+  const {overlayStyle, isVisible, onBackdropPress, items, batches} = props;
 
-  const {overlayStyle, isVisible, onBackdropPress, items, lotNumbers} = props;
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleCheckout = async () => {
+    setIsLoading(true);
+    let promises = [];
+    const tbCheckoutBatches = batches.filter(
+      batch => batch.item.dispenseCount > 0,
+    );
+    for (const batch of tbCheckoutBatches) {
+      const newQuantity =
+        parseInt(batch.quantity) - parseInt(batch.item.dispenseCount);
+      promises.push(adjustInventory(api_token, batch.id, newQuantity));
+    }
+
+    try {
+      await Promise.all(promises);
+      setIsLoading(false);
+      onBackdropPress();
+    } catch (e) {
+      console.log(e);
+      alert('There were some items that failed to dispense');
+      setIsLoading(false);
+    }
+  };
+
   return (
     <Overlay
       overlayStyle={overlayStyle}
@@ -74,17 +100,19 @@ export const DispenseCheckoutOverlay = props => {
                         </Text>
                       </View>
 
-                      {lotNumbers
+                      {batches
                         .filter(
-                          ln => ln.itemId === item.id && ln.dispenseCount > 0,
+                          batch =>
+                            batch.item.id === item.id &&
+                            batch.item.dispenseCount > 0,
                         )
-                        .map(lnf => {
+                        .map(batch => {
                           return (
                             <Text
                               style={{color: '#B7B7B7', fontSize: 12}}>{`(x${
-                              lnf.dispenseCount
-                            }) Lot#${lnf.number} Exp. ${new Date(
-                              lnf.expiry,
+                              batch.item.dispenseCount
+                            }) ${batch.batch_name} Exp. ${new Date(
+                              batch.expiration_date.split(' ')[0],
                             ).toLocaleDateString()}`}</Text>
                           );
                         })}
@@ -98,10 +126,6 @@ export const DispenseCheckoutOverlay = props => {
               );
             })}
         </ScrollView>
-
-        {/* <View style={{flexDirection: 'row'}}>
-          <Text>{`By: ${first_name} ${last_name}`}</Text>
-        </View> */}
 
         <View
           style={{
@@ -132,6 +156,8 @@ export const DispenseCheckoutOverlay = props => {
 
         <Button
           title={'Confirm'}
+          loading={isLoading}
+          onPress={() => handleCheckout()}
           buttonStyle={{
             backgroundColor: APP_THEME.primaryColor,
             borderRadius: 8,

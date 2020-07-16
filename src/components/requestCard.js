@@ -2,11 +2,22 @@ import React, {useState} from 'react';
 import {View, Text, TouchableHighlight} from 'react-native';
 import {Icon, Card, Divider} from 'react-native-elements';
 
-export const RequestCard = ({children}) => {
+export const RequestCard = ({
+  request,
+  supplyingFacilityName,
+  receivingFacilityName,
+  children,
+}) => {
   const [isCollapsed, setIsCollapsed] = useState(true);
 
+  const xpectedDeliveryDate = request.expected_delivery_date;
   return (
-    <Card containerStyle={{elevation: 4, borderRadius: 8, padding: 0}}>
+    <Card
+      containerStyle={{
+        elevation: 4,
+        borderRadius: 8,
+        padding: 0,
+      }}>
       <TouchableHighlight
         onPress={() => setIsCollapsed(!isCollapsed)}
         underlayColor={'#F5F5F5'}>
@@ -20,7 +31,11 @@ export const RequestCard = ({children}) => {
                   marginBottom: 8,
                   alignItems: 'center',
                 }}>
-                <Text style={{fontWeight: 'bold'}}>RQT #2020001231-3922</Text>
+                <Text style={{fontWeight: 'bold'}}>{`RQT #${new Date(
+                  xpectedDeliveryDate.split(' ')[0],
+                )
+                  .toISOString()
+                  .replace('T00:00:00.000Z', '')}`}</Text>
 
                 <View style={{flexGrow: 1}} />
 
@@ -39,7 +54,13 @@ export const RequestCard = ({children}) => {
                     size={10}
                     containerStyle={{marginRight: 4}}
                   />
-                  <Text style={{color: '#B3B3B3', fontSize: 10}}>2500 ea</Text>
+                  <Text
+                    style={{
+                      color: '#B3B3B3',
+                      fontSize: 10,
+                    }}>{`${request.items.reduce((total, item) => {
+                    return total + item.quantity;
+                  }, 0)}`}</Text>
                 </View>
               </View>
 
@@ -57,7 +78,7 @@ export const RequestCard = ({children}) => {
                   containerStyle={{marginRight: 8}}
                 />
                 <Text style={{fontSize: 12, color: '#B4B4B4'}}>
-                  June 25, 2020 10:45 A.M
+                  {new Date(xpectedDeliveryDate.split(' ')[0]).toDateString()}
                 </Text>
               </View>
 
@@ -76,7 +97,7 @@ export const RequestCard = ({children}) => {
                     marginRight: 8,
                     width: 100,
                   }}>
-                  RF: Minglanilla Rural Facility
+                  {`RF: ${receivingFacilityName}`}
                 </Text>
 
                 <Icon
@@ -87,7 +108,7 @@ export const RequestCard = ({children}) => {
                   containerStyle={{marginRight: 8}}
                 />
                 <Text style={{fontSize: 10, color: '#B4B4B4', width: 100}}>
-                  SF: Cebu Main Office Facility
+                  {`SF: ${supplyingFacilityName}`}
                 </Text>
               </View>
             </View>

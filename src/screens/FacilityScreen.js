@@ -1,12 +1,23 @@
 import React, {useEffect, useState, useContext, useRef} from 'react';
 import {View, StyleSheet, Text, ScrollView} from 'react-native';
-import {CustomHeader, InfoBlock} from '../components';
+import {
+  CustomHeader,
+  InfoBlock,
+  InventoryExtension,
+  ItemCard,
+} from '../components';
 import {Divider} from 'react-native-elements';
 
 import MapView, {PROVIDER_GOOGLE, Marker} from 'react-native-maps';
 
 import {AuthContext} from '../context';
-import {getUsers, getUserById} from '../utils/helper';
+import {
+  getUsers,
+  getUserById,
+  getTagColor,
+  getTagLabelColor,
+} from '../utils/helper';
+import {getItems, getFacilityBatches} from '../utils/api';
 
 export const FacilityScreen = ({route, navigation}) => {
   const {
@@ -27,6 +38,9 @@ export const FacilityScreen = ({route, navigation}) => {
   const [createdByUser, setCreatedByUser] = useState('');
   const [representative, setRepresentative] = useState('');
 
+  const [items, setItems] = useState([]);
+  const [batches, setBatches] = useState([]);
+
   let mapRef = useRef(null);
 
   const getUsersData = async () => {
@@ -39,14 +53,23 @@ export const FacilityScreen = ({route, navigation}) => {
     setRepresentative(userRepresentative);
   };
 
-  const clearData = () => {
+  const clearUserData = () => {
     setRepresentative('');
     setCreatedByUser('');
   };
 
   useEffect(() => {
     getUsersData();
+    getItems(api_token).then(data => {
+      setItems(data);
+    });
   }, [route]);
+
+  useEffect(() => {
+    getFacilityBatches(api_token, id).then(data => {
+      setBatches(data);
+    });
+  }, [items]);
 
   return (
     <View style={styles.container}>
@@ -55,7 +78,7 @@ export const FacilityScreen = ({route, navigation}) => {
         type={1}
         LeftComponentFunc={() => {
           navigation.goBack();
-          clearData();
+          clearUserData();
         }}
         subHeader={`Created by: ${createdByUser}`}
       />
@@ -152,7 +175,35 @@ export const FacilityScreen = ({route, navigation}) => {
           </MapView>
 
           <Divider style={styles.dividerStyle} />
+
+          <Text style={{color: '#B9BABA', fontSize: 16, marginVertical: 12}}>
+            Inventory
+          </Text>
         </View>
+
+        {items.map((item, index) => {
+          return (
+            <ItemCard
+              title={item.item_name}
+              price={batches
+                .filter(batch => batch.item.id === item.id)
+                .reduce((total, item) => {
+                  return total + item.quantity;
+                }, 0)}
+              tag={item.category}
+              tagColor={getTagColor(item.category)}
+              tagLabelColor={getTagLabelColor(item.category)}
+              type={1}>
+              <InventoryExtension
+                navigation={navigation}
+                facilityId={id}
+                item={item}
+                itemDetails={batches.filter(batch => batch.item.id === item.id)}
+                showAdjustInventory={false}
+              />
+            </ItemCard>
+          );
+        })}
       </ScrollView>
     </View>
   );

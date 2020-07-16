@@ -13,33 +13,20 @@ import {
 
 import DateTimePicker from '@react-native-community/datetimepicker';
 
-import {CustomHeader, ErrorHandlingField, PlaceFinder} from '../components';
+import {CustomHeader, ErrorHandlingField} from '../components';
 
 import {Button, Icon, Overlay} from 'react-native-elements';
 
 import {AuthContext} from '../context';
 
-import {useFetch, useForm} from '../hooks';
+import {
+  createRequestInventory,
+  editRequestInventory,
+  getItems,
+  getFacilities,
+} from '../utils/api';
 
-import {FACILITY_TYPE, POPCOM_URL, APP_THEME} from '../utils/constants';
-
-const FORM_KEYS = {
-  FIRST_NAME: 'first_name',
-  LAST_NAME: 'last_name',
-  CONTACT_NUMBER: 'contact_number',
-  EMAIL: 'email',
-  PASSWORD: 'password',
-  USER_STATUS: 'user_status',
-  FACILITY_NAME: 'facility_name',
-  ADDRESS: 'address',
-  REGION: 'region',
-  PROVINCE: 'province',
-  LONGITUDE: 'longitude',
-  LATITUDE: 'latitude',
-  FACILITY_TYPE: 'facility_type',
-  FACILITY_STATUS: 'facility_status',
-  API_TOKEN: 'api_token',
-};
+import {APP_THEME} from '../utils/constants';
 
 const ItemsOverlay = ({
   isOpen,
@@ -48,8 +35,11 @@ const ItemsOverlay = ({
   selectedItems,
   setSelectedItems,
 }) => {
-  const handleOnTouch = itemName => {
-    setSelectedItems([...selectedItems, {itemName: itemName, quantity: '0'}]);
+  const handleOnTouch = (itemName, itemId) => {
+    setSelectedItems([
+      ...selectedItems,
+      {item_id: itemId, item: {item_name: itemName}, quantity: 0, uom: 'pcs'},
+    ]);
     setIsOpen(false);
   };
 
@@ -61,7 +51,8 @@ const ItemsOverlay = ({
       <View>
         {items.map(item => {
           return (
-            <TouchableOpacity onPress={() => handleOnTouch(item.item_name)}>
+            <TouchableOpacity
+              onPress={() => handleOnTouch(item.item_name, item.id)}>
               <View style={{paddingHorizontal: 10, marginVertical: 8}}>
                 <Text>{item.item_name}</Text>
               </View>
@@ -73,77 +64,9 @@ const ItemsOverlay = ({
   );
 };
 
-export const addRequestInventoryScreen = ({navigation}) => {
+export const addRequestInventoryScreen = ({route, navigation}) => {
   const {getUser} = useContext(AuthContext);
   const {api_token} = getUser();
-  const {data, isLoading, errorMessage, fetchData} = useFetch();
-
-  const getRequestBodyFromValues = formValues => {
-    return R.pipe(
-      R.assoc(FORM_KEYS.ADDRESS, formValues[FORM_KEYS.ADDRESS]?.place_name),
-      R.assoc(
-        FORM_KEYS.PROVINCE,
-        formValues[FORM_KEYS.ADDRESS]?.context[1].text,
-      ),
-      R.assoc(FORM_KEYS.LONGITUDE, formValues[FORM_KEYS.ADDRESS]?.center[0]),
-      R.assoc(FORM_KEYS.LATITUDE, formValues[FORM_KEYS.ADDRESS]?.center[1]),
-    )(formValues);
-  };
-
-  const validate = formValues => {
-    let errors = {};
-
-    const newValues = getRequestBodyFromValues(formValues);
-
-    const requiredFields = Object.keys(FORM_KEYS).filter(
-      key => key != 'LONGITUDE' && key != 'LATITUDE',
-    );
-
-    //required fields must not be empty
-    requiredFields.forEach(key => {
-      if (!newValues[FORM_KEYS[key]] || newValues[FORM_KEYS[key]].trim() === '')
-        errors[FORM_KEYS[key]] = `${FORM_KEYS[key]} must not be empty`;
-    });
-
-    console.log(errors);
-
-    return errors;
-  };
-
-  const addRequestInventory = async formValues => {
-    const requestBody = new URLSearchParams(
-      getRequestBodyFromValues(formValues),
-    );
-    const endpoint = `${POPCOM_URL}/api/create-facility?${requestBody.toString()}`;
-    const options = {
-      headers: {
-        accept: 'application/json',
-      },
-      method: 'post',
-    };
-    fetchData(endpoint, options, () => alert('failed to create facility'));
-  };
-
-  const initialState = {
-    [FORM_KEYS.FACILITY_TYPE]: FACILITY_TYPE[0].name,
-    [FORM_KEYS.API_TOKEN]: api_token,
-    [FORM_KEYS.USER_STATUS]: '1',
-    [FORM_KEYS.FACILITY_STATUS]: '1',
-  };
-  const {
-    onFieldValueChange,
-    onFormSubmit,
-    resetForm,
-    errors,
-    formValues,
-  } = useForm(initialState, addRequestInventory, validate);
-
-  useEffect(() => {
-    if (data) {
-      resetForm();
-      //   navigation.navigate('Facilities');
-    }
-  }, [data]);
 
   const [items, setItems] = useState([]);
   const [selectedItems, setSelectedItems] = useState([]);
@@ -156,59 +79,110 @@ export const addRequestInventoryScreen = ({navigation}) => {
   const [deliveryDate, setRequestedDeliveryDate] = useState(new Date());
   const [isDatePickerVisible, setIsDatePickerVisible] = useState(false);
 
+  const [message, setMessage] = useState('');
+
+  const [isLoading, setIsLoading] = useState(false);
+
+  const clearForm = () => {
+    setItems([]);
+    setSelectedItems([]);
+
+    setFacilities([]);
+    setRequestingFacility(null);
+    setSupplyingFacility(null);
+
+    setRequestedDeliveryDate(new Date());
+
+    setMessage('');
+  };
+
   const onDateChange = (event, selectedDate) => {
     setRequestedDeliveryDate(selectedDate);
     setIsDatePickerVisible(false);
   };
 
-  const getFacilities = async () => {
-    const endpoint = `${POPCOM_URL}/api/get-facilities?api_token=${api_token}`;
-    const request = await fetch(endpoint);
-    console.log(request);
-    if (!request.ok) {
-      alert('failed to get facilities');
-      return;
+  const handleCreateRequestInventory = async () => {
+    try {
+      setIsLoading(true);
+      const newItems = [];
+
+      selectedItems.forEach(item => {
+        const newItem = R.dissoc('itemName', item);
+        newItems.push(newItem);
+      });
+
+      let request;
+
+      if (!route.params) {
+        request = await createRequestInventory(
+          api_token,
+          requestingFacility,
+          supplyingFacility,
+          newItems,
+          message,
+          new Date(deliveryDate),
+        );
+      } else {
+        request = await editRequestInventory(
+          api_token,
+          route.params.id,
+          requestingFacility,
+          supplyingFacility,
+          newItems,
+          message,
+          new Date(deliveryDate),
+        );
+      }
+      setIsLoading(false);
+
+      if (request === 1) {
+        clearForm();
+        navigation.goBack();
+      }
+    } catch (e) {
+      setIsLoading(false);
+
+      console.log(e);
     }
-
-    const response = await request.json();
-    setFacilities(response.data);
-  };
-
-  const getItems = async () => {
-    const endpoint = `${POPCOM_URL}/api/get-items?api_token=${api_token}`;
-    const options = {
-      headers: {
-        accept: 'application/json',
-      },
-      method: 'post',
-    };
-
-    const request = await fetch(endpoint, options);
-
-    if (!request.ok) {
-      alert('failed to get items');
-      return;
-    }
-
-    const response = await request.json();
-    setItems(response.data);
   };
 
   useEffect(() => {
     return navigation.addListener('focus', () => {
-      getFacilities();
-      getItems();
+      getFacilities(api_token).then(data => setFacilities(data));
+      getItems(api_token).then(data => setItems(data));
     });
   }, []);
+
+  useEffect(() => {
+    if (route.params) {
+      const request = route.params;
+      setRequestingFacility(request.receiving_facility_id);
+      setSupplyingFacility(request.supplying_facility_id);
+      setRequestedDeliveryDate(
+        new Date(request.expected_delivery_date.split(' ')[0]),
+      );
+      setMessage(request.message);
+      setSelectedItems(
+        request.items.map(i => {
+          return {
+            item_id: i.item_id,
+            item: {item_name: i.item.item_name},
+            quantity: i.quantity,
+            uom: 'pcs',
+          };
+        }),
+      );
+    }
+  }, [route]);
 
   return (
     <View style={styles.container}>
       <CustomHeader
         LeftComponentFunc={() => {
-          resetForm();
-          navigation.navigate('RequestInventory');
+          clearForm();
+          navigation.goBack();
         }}
-        title={'Create Request Inventory'}
+        title={!route.params ? 'Create Request Inventory' : 'Edit Request'}
         type={1}
       />
 
@@ -252,19 +226,17 @@ export const addRequestInventoryScreen = ({navigation}) => {
           </View>
 
           <ErrorHandlingField
-            title={'Requesting Facility'}
+            title={'Receiving Facility'}
             style={APP_THEME.inputContainerStyle}>
             <Picker
               style={{height: 37}}
-              //   selectedValue={formValues[FORM_KEYS.FACILITY_TYPE]}
-              //   onValueChange={(value, index) =>
-              //     onFieldValueChange(FORM_KEYS.FACILITY_TYPE, value)
-              //   }
+              selectedValue={requestingFacility}
+              onValueChange={(value, index) => setRequestingFacility(value)}
               mode={'dropdown'}>
               {facilities.map((item, index) => (
                 <Picker.Item
                   key={index}
-                  value={item.facility_name}
+                  value={item.id}
                   label={item.facility_name}
                 />
               ))}
@@ -276,15 +248,13 @@ export const addRequestInventoryScreen = ({navigation}) => {
             style={APP_THEME.inputContainerStyle}>
             <Picker
               style={{height: 37}}
-              //   selectedValue={formValues[FORM_KEYS.FACILITY_TYPE]}
-              //   onValueChange={(value, index) =>
-              //     onFieldValueChange(FORM_KEYS.FACILITY_TYPE, value)
-              //   }
+              selectedValue={supplyingFacility}
+              onValueChange={(value, index) => setSupplyingFacility(value)}
               mode={'dropdown'}>
               {facilities.map((item, index) => (
                 <Picker.Item
                   key={index}
-                  value={item.facility_name}
+                  value={item.id}
                   label={item.facility_name}
                 />
               ))}
@@ -363,7 +333,7 @@ export const addRequestInventoryScreen = ({navigation}) => {
             {selectedItems.map((item, index) => {
               return (
                 <View style={{flexDirection: 'row', alignItems: 'center'}}>
-                  <Text>{item.itemName}</Text>
+                  <Text>{item.item.item_name}</Text>
                   <View style={{flexGrow: 1}} />
 
                   <TextInput
@@ -372,12 +342,12 @@ export const addRequestInventoryScreen = ({navigation}) => {
                       const newValues = [...selectedItems];
                       (newValues[index] = {
                         ...selectedItems[index],
-                        quantity: newText,
+                        quantity: newText ? parseInt(newText) : 0,
                       }),
                         setSelectedItems(newValues);
                     }}
                     style={{height: 37}}
-                    value={item.quantity}
+                    value={item.quantity.toString()}
                   />
                   <Icon
                     name="times"
@@ -416,6 +386,8 @@ export const addRequestInventoryScreen = ({navigation}) => {
           <TextInput
             placeholder={'Type something...'}
             numberOfLines={5}
+            value={message}
+            onChangeText={newText => setMessage(newText)}
             style={{
               backgroundColor: '#EBEBEB',
               borderRadius: 8,
@@ -426,7 +398,7 @@ export const addRequestInventoryScreen = ({navigation}) => {
         </View>
 
         <Button
-          title={'Create Request Facility'}
+          title={!route.params ? 'Create Request Inventory' : 'Edit Request'}
           loading={isLoading}
           buttonStyle={{
             backgroundColor: '#043D10',
@@ -442,7 +414,7 @@ export const addRequestInventoryScreen = ({navigation}) => {
               style={{marginRight: 8}}
             />
           }
-          onPress={onFormSubmit}
+          onPress={handleCreateRequestInventory}
         />
       </ScrollView>
     </View>

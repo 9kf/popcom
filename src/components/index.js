@@ -8,3 +8,4 @@ export * from './imagePicker';
 export * from './placeFinder';
 export * from './infoBlock';
 export * from './requestCard';
+export * from './inventoryExtension';

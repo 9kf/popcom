@@ -43,13 +43,15 @@ export const AddItemScreen = ({navigation}) => {
 
   const validate = formValues => {
     let errors = {};
-    const newValues = R.assoc(
-      FORM_KEYS.IMAGE,
-      formValues[FORM_KEYS.IMAGE]?.data,
-      formValues,
-    );
+    // const newValues = R.assoc(
+    //   FORM_KEYS.IMAGE,
+    //   formValues[FORM_KEYS.IMAGE]?.data,
+    //   formValues,
+    // );
+    const newValues = R.dissoc(FORM_KEYS.IMAGE, formValues);
+    const mFormKeys = R.dissoc('IMAGE', FORM_KEYS);
     //required fields must not be empty
-    Object.keys(FORM_KEYS).forEach((key, index) => {
+    Object.keys(mFormKeys).forEach((key, index) => {
       if (!newValues[FORM_KEYS[key]] || newValues[FORM_KEYS[key]].trim() === '')
         errors[FORM_KEYS[key]] = `${FORM_KEYS[key]} must not be empty`;
     });
@@ -126,11 +128,11 @@ export const AddItemScreen = ({navigation}) => {
         type={1}
       />
       <ScrollView showsVerticalScrollIndicator={false}>
-        <ImagePickerComponent
+        {/* <ImagePickerComponent
           setImage={onFieldValueChange(FORM_KEYS.IMAGE)}
           image={formValues[FORM_KEYS.IMAGE]}
           errorMessage={errors[FORM_KEYS.IMAGE]}
-        />
+        /> */}
         <View
           style={{
             marginHorizontal: 20,

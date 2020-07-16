@@ -37,6 +37,7 @@ const AddBatchInventory = ({isOpen, setIsOpen, addBatch}) => {
   const [quantity, setQuantity] = useState(0);
 
   const onDateChange = (event, date) => {
+    console.log(date);
     setExpiryDate(date);
     setIsDatePickerOpen(false);
   };
@@ -122,7 +123,7 @@ const AddBatchInventory = ({isOpen, setIsOpen, addBatch}) => {
         <Button
           title={'Add Batch Inventory'}
           onPress={() => {
-            // addBatch(batchName, expiryDate, quantity);
+            addBatch(batchName, expiryDate, quantity);
             setIsOpen(false);
           }}
           buttonStyle={{
@@ -154,27 +155,26 @@ export const AdjustInventoryScreen = ({route, navigation}) => {
   const {category, item_name, id} = route.params.item;
 
   const [isAddBatchOpen, setIsAddBatchOpen] = useState(false);
+  const [batches, setBatches] = useState([]);
 
   const addBatch = async (batchName, expiryDate, quantity) => {
-    const urlParams = new URLSearchParams({
-      api_token: api_token,
-      batch_name: batchName,
-      facility_id: facility_id,
-      items: [
-        {
-          item_id: id,
-          quantity: quantity,
-          uom: 'pcs',
-          expiration_date: expiryDate,
-        },
-      ],
-    });
-    const endpoint = `${POPCOM_URL}/api/add-starting-inventory?${urlParams.toString()}`;
+    const endpoint = `${POPCOM_URL}/api/add-starting-inventory`;
     const request = await fetch(endpoint, {
       method: 'post',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        api_token: api_token,
+        batch_name: batchName,
+        facility_id: facility_id,
+        item_id: id,
+        quantity: quantity,
+        uom: 'pcs',
+        expiration_date: (new Date(expiryDate).getTime() / 1000).toFixed(0),
+      }),
     });
-
-    console.log(request);
 
     if (!request.ok) {
       alert('failed to add batch');
@@ -182,18 +182,19 @@ export const AdjustInventoryScreen = ({route, navigation}) => {
     }
 
     const response = await request.json();
-    console.log(response);
+    setBatches([...batches, response.data]);
   };
 
   useEffect(() => {
-    console.log(route);
+    setBatches(route.params.batches);
   }, [route]);
 
   return (
     <View style={styles.container}>
       <CustomHeader
         LeftComponentFunc={() => {
-          navigation.navigate('Inventory');
+          // navigation.navigate('Inventory');
+          navigation.goBack();
         }}
         title={'Adjust Inventory'}
         type={1}
@@ -250,96 +251,47 @@ export const AdjustInventoryScreen = ({route, navigation}) => {
             Inventory Data
           </Text>
           <View style={{flexGrow: 1}} />
-          <Text>1800 ea</Text>
+          <Text>{`${batches.reduce((total, item) => {
+            return total + parseInt(item.quantity);
+          }, 0)} ea`}</Text>
         </View>
       </View>
 
-      <View
-        style={{
-          paddingHorizontal: 20,
-          paddingBottom: 12,
-          flexDirection: 'row',
-          alignItems: 'center',
-          marginBottom: 8,
-          borderBottomWidth: 1,
-          borderBottomColor: 'gray',
-        }}>
-        <View>
-          <Text style={{fontWeight: 'bold', fontSize: 18}}>
-            Batch#2020-193328
-          </Text>
-          <Text style={{color: '#B7B7B7', fontSize: 12}}>Expiry: 2021-03</Text>
-        </View>
-        <View style={{flexGrow: 1}} />
+      {batches.map(batch => {
+        return (
+          <View
+            style={{
+              paddingHorizontal: 20,
+              paddingBottom: 12,
+              flexDirection: 'row',
+              alignItems: 'center',
+              marginBottom: 8,
+              borderBottomWidth: 1,
+              borderBottomColor: 'gray',
+            }}>
+            <View>
+              <Text style={{fontWeight: 'bold', fontSize: 18}}>
+                {batch.batch_name}
+              </Text>
+              <Text
+                style={{color: '#B7B7B7', fontSize: 12}}>{`Expiry: ${new Date(
+                batch.expiration_date.split(' ')[0],
+              ).toLocaleDateString()}`}</Text>
+            </View>
+            <View style={{flexGrow: 1}} />
 
-        <Text>600 ea</Text>
+            <Text>{batch.quantity}</Text>
 
-        <Icon
-          name="edit"
-          size={20}
-          color="#B3B3B3"
-          type="font-awesome-5"
-          style={{marginLeft: 8}}
-        />
-      </View>
-
-      <View
-        style={{
-          paddingHorizontal: 20,
-          paddingBottom: 12,
-          flexDirection: 'row',
-          alignItems: 'center',
-          marginBottom: 8,
-          borderBottomWidth: 1,
-          borderBottomColor: 'gray',
-        }}>
-        <View>
-          <Text style={{fontWeight: 'bold', fontSize: 18}}>
-            Batch#2019-142158
-          </Text>
-          <Text style={{color: '#B7B7B7', fontSize: 12}}>Expiry: 2020-07</Text>
-        </View>
-        <View style={{flexGrow: 1}} />
-
-        <Text>600 ea</Text>
-
-        <Icon
-          name="edit"
-          size={20}
-          color="#B3B3B3"
-          type="font-awesome-5"
-          style={{marginLeft: 8}}
-        />
-      </View>
-
-      <View
-        style={{
-          paddingHorizontal: 20,
-          paddingBottom: 12,
-          flexDirection: 'row',
-          alignItems: 'center',
-          marginBottom: 8,
-          borderBottomWidth: 1,
-          borderBottomColor: 'gray',
-        }}>
-        <View>
-          <Text style={{fontWeight: 'bold', fontSize: 18}}>
-            Batch#2019-124895{' '}
-          </Text>
-          <Text style={{color: '#B7B7B7', fontSize: 12}}>Expiry: 2020-10</Text>
-        </View>
-        <View style={{flexGrow: 1}} />
-
-        <Text>600 ea</Text>
-
-        <Icon
-          name="edit"
-          size={20}
-          color="#B3B3B3"
-          type="font-awesome-5"
-          style={{marginLeft: 8}}
-        />
-      </View>
+            <Icon
+              name="edit"
+              size={20}
+              color="#B3B3B3"
+              type="font-awesome-5"
+              style={{marginLeft: 8}}
+            />
+          </View>
+        );
+      })}
 
       <Button
         title={'Add Batch Inventory'}

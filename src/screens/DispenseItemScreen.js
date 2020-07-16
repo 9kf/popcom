@@ -1,4 +1,5 @@
 import React, {useState, useContext, useEffect} from 'react';
+import * as R from 'ramda';
 
 import {
   View,
@@ -20,15 +21,10 @@ import {Button} from 'react-native-elements';
 
 import {DispenseCheckoutOverlay} from '../overlays';
 
-import {
-  getTagColor,
-  getTagLabelColor,
-  getTotalItemCount,
-} from '../utils/helper';
+import {getTagColor, getTagLabelColor} from '../utils/helper';
 import {AuthContext} from '../context';
 import {POPCOM_URL, APP_THEME} from '../utils/constants';
 
-import {MockApiContext} from '../utils/mockAPI';
 import {useFetch} from '../hooks';
 
 const DispenseItemsExtension = ({itemDetails, setItemDetails}) => {
@@ -36,9 +32,13 @@ const DispenseItemsExtension = ({itemDetails, setItemDetails}) => {
     setItemDetails(
       {
         ...itemDetails[index],
-        dispenseCount: itemDetails[index].dispenseCount + 1,
+        item: {
+          ...itemDetails[index].item,
+          dispenseCount: parseInt(itemDetails[index].item.dispenseCount) + 1,
+        },
       },
-      itemDetails[index].number,
+      itemDetails[index].id,
+      itemDetails[index].item.id,
     );
   };
 
@@ -47,12 +47,30 @@ const DispenseItemsExtension = ({itemDetails, setItemDetails}) => {
       setItemDetails(
         {
           ...itemDetails[index],
-          dispenseCount: itemDetails[index].dispenseCount - 1,
+          item: {
+            ...itemDetails[index].item,
+            dispenseCount: parseInt(itemDetails[index].item.dispenseCount) - 1,
+          },
         },
-        itemDetails[index].number,
+        itemDetails[index].id,
+        itemDetails[index].item.id,
       );
     }
   };
+
+  const setCount = R.curry((index, count) => {
+    setItemDetails(
+      {
+        ...itemDetails[index],
+        item: {
+          ...itemDetails[index].item,
+          dispenseCount: count,
+        },
+      },
+      itemDetails[index].id,
+      itemDetails[index].item.id,
+    );
+  });
 
   return (
     <View style={styles.itemDetailsLayout}>
@@ -69,9 +87,11 @@ const DispenseItemsExtension = ({itemDetails, setItemDetails}) => {
               {index === 0 && (
                 <Text style={styles.itemDetailsHeader}>BATCH/LOT NO.</Text>
               )}
-              <Text style={{fontWeight: 'bold'}}>{`LOT#${item.number}`}</Text>
+              <Text style={{fontWeight: 'bold'}}>{item.batch_name}</Text>
               <Text style={{color: '#C0C0C0'}}>
-                {`Exp. ${new Date(item.expiry).toLocaleDateString()}`}
+                {`Exp. ${new Date(
+                  item.expiration_date.split(' ')[0],
+                ).toLocaleDateString()}`}
               </Text>
             </View>
             <View style={index != 0 && {alignSelf: 'center'}}>
@@ -80,9 +100,10 @@ const DispenseItemsExtension = ({itemDetails, setItemDetails}) => {
             </View>
             <View style={{alignSelf: 'center'}}>
               <Counter
-                count={item.dispenseCount}
+                count={item.item.dispenseCount}
                 addCount={() => addDispenseCount(index)}
                 subtractCount={() => subTractDispenseCount(index)}
+                setCount={setCount(index)}
               />
             </View>
           </View>
@@ -112,14 +133,14 @@ export const DispenseItemScreen = ({navigation}) => {
   const {getUser} = useContext(AuthContext);
   const {api_token} = getUser();
   const {data, errorMessage, isLoading, fetchData} = useFetch();
-  const {lotNumbers} = useContext(MockApiContext);
 
-  const [stateLotNumbers, setStateLotNumbers] = useState([]);
   const [totalItemDispenseCount, setTotalItemDispenseCount] = useState(0);
   const [isCheckoutVisible, setIsCheckoutVisible] = useState(false);
 
   const [facilities, setFacilities] = useState([]);
   const [selectedFacility, setSelectedFacility] = useState('');
+
+  const [batches, setBatches] = useState([]);
 
   const fetchItems = async () => {
     const endpoint = `${POPCOM_URL}/api/get-items?api_token=${api_token}`;
@@ -129,7 +150,17 @@ export const DispenseItemScreen = ({navigation}) => {
       },
       method: 'post',
     };
-    fetchData(endpoint, options, () => alert('Failed to get list of items'));
+    const request = await fetch(endpoint, options);
+
+    if (!request.ok) {
+      console.log('error');
+      return;
+    }
+
+    const responseJson = await request.json();
+    setItems(responseJson.data);
+
+    // fetchData(endpoint, options, () => alert('Failed to get list of items'));
   };
 
   const fetchFacilities = async () => {
@@ -145,13 +176,13 @@ export const DispenseItemScreen = ({navigation}) => {
     setFacilities(responseJson.data);
   };
 
-  const addLotNumberDispenseCountProp = () => {
-    let lotNumbersCopy = [...lotNumbers];
-    lotNumbers.forEach((item, index) => {
-      lotNumbersCopy[index] = {...item, dispenseCount: 0};
+  const addLotNumberDispenseCountProp = batches => {
+    let batchesCopy = [...batches];
+    batches.forEach((batch, index) => {
+      batchesCopy[index] = {...batch, item: {...batch.item, dispenseCount: 0}};
     });
 
-    return lotNumbersCopy;
+    return batchesCopy;
   };
 
   const addItemDispenseCountProp = items => {
@@ -164,46 +195,73 @@ export const DispenseItemScreen = ({navigation}) => {
     return itemsCopy;
   };
 
+  const getFacilityBatchById = async () => {
+    const body = {
+      api_token: api_token,
+      facility_id: selectedFacility,
+    };
+    const endpoint = `${POPCOM_URL}/api/get-facility-batches`;
+    const request = await fetch(endpoint, {
+      method: 'post',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    });
+
+    if (!request.ok) {
+      alert('failed');
+      return;
+    }
+
+    const response = await request.json();
+    setBatches(addLotNumberDispenseCountProp(response.data));
+  };
+
   useEffect(() => {
     return navigation.addListener('focus', () => {
       fetchItems();
       fetchFacilities();
-      setStateLotNumbers(addLotNumberDispenseCountProp());
     });
   }, []);
 
   useEffect(() => {
+    getFacilityBatchById();
+  }, [selectedFacility]);
+
+  useEffect(() => {
     let itemsCopy = [...items];
     let nonZeroDispenseCount = 0;
+
     items.forEach((item, index) => {
-      const totalDispenseCount = stateLotNumbers
-        .filter(sln => sln.itemId === item.id)
-        .reduce((total, item) => {
-          return total + item.dispenseCount;
+      const totalDispenseCount = batches
+        .filter(batch => batch.item.id === item.id)
+        .reduce((total, batch) => {
+          return total + parseInt(batch.item.dispenseCount);
         }, 0);
+      nonZeroDispenseCount += totalDispenseCount;
 
       itemsCopy[index] = {
         ...itemsCopy[index],
         totalDispenseCount: totalDispenseCount,
       };
-      if (totalDispenseCount > 0) nonZeroDispenseCount++;
     });
 
     setTotalItemDispenseCount(nonZeroDispenseCount);
     setItems(itemsCopy);
-  }, [stateLotNumbers]);
-
-  useEffect(() => {
-    if (data) setItems(addItemDispenseCountProp(data.data));
-  }, [data]);
+  }, [batches]);
 
   return (
     <View style={styles.container}>
       <DispenseCheckoutOverlay
-        onBackdropPress={() => setIsCheckoutVisible(false)}
+        onBackdropPress={() => {
+          getFacilityBatchById();
+          setIsCheckoutVisible(false);
+        }}
         isVisible={isCheckoutVisible}
         items={items}
-        lotNumbers={stateLotNumbers}
+        batches={batches}
       />
 
       <CustomHeader
@@ -251,27 +309,27 @@ export const DispenseItemScreen = ({navigation}) => {
           return (
             <ItemCard
               title={item.item_name}
-              price={getTotalItemCount(
-                lotNumbers.filter(num => num.itemId === item.id),
-              )}
-              count={item.totalDispenseCount}
+              price={batches
+                .filter(batch => batch.item.id === item.id)
+                .reduce((total, item) => {
+                  return total + parseInt(item.quantity);
+                }, 0)}
               tag={item.category}
+              count={item.totalDispenseCount ? item.totalDispenseCount : 0}
               tagColor={getTagColor(item.category)}
               tagLabelColor={getTagLabelColor(item.category)}
               showAdjustInventoryButton={true}
               type={1}>
               <DispenseItemsExtension
-                itemDetails={stateLotNumbers.filter(
-                  num => num.itemId === item.id,
-                )}
-                setItemDetails={(newItemDetails, i) => {
-                  let lotNumbersCopy = [...stateLotNumbers];
-                  lotNumbersCopy[
-                    stateLotNumbers.findIndex(sln => {
-                      return sln.number === i;
+                itemDetails={batches.filter(batch => batch.item.id === item.id)}
+                setItemDetails={(newItemDetails, batchId, itemId) => {
+                  let batchCopy = [...batches];
+                  batchCopy[
+                    batches.findIndex(batch => {
+                      return batch.id === batchId;
                     })
                   ] = newItemDetails;
-                  setStateLotNumbers(lotNumbersCopy);
+                  setBatches(batchCopy);
                 }}
               />
             </ItemCard>
