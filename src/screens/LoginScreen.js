@@ -15,6 +15,10 @@ import {useFetch} from '../hooks';
 const logo = require('../../images/logo/popcom-logo.png');
 const title = require('../../images/title/title.png');
 
+const handleInputChange = setter => newText => {
+  setter(newText);
+};
+
 export const LoginScreen = () => {
   const {login} = useContext(AuthContext);
 
@@ -60,7 +64,7 @@ export const LoginScreen = () => {
             textInputProps={{
               value: userName,
               placeholder: 'Username / Email',
-              onChangeText: newText => setUserName(newText),
+              onChangeText: handleInputChange(setUserName),
             }}
             focusedBorderColor={APP_THEME.primaryColor}
           />
@@ -69,7 +73,7 @@ export const LoginScreen = () => {
               value: password,
               placeholder: 'Password',
               secureTextEntry: true,
-              onChangeText: newText => setPassword(newText),
+              onChangeText: handleInputChange(setPassword),
             }}
             focusedBorderColor={APP_THEME.primaryColor}
           />

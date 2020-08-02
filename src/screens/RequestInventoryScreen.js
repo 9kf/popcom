@@ -33,7 +33,7 @@ const AddItemButton = ({navigation}) => (
 
 export const RequestInventoryScreen = ({navigation}) => {
   const {getUser} = useContext(AuthContext);
-  const {api_token} = getUser();
+  const {api_token, roles, facility_id} = getUser();
 
   const [facilities, setFacilities] = useState([]);
   const [selectedFacility, setSelectedFacility] = useState(null);
@@ -72,7 +72,9 @@ export const RequestInventoryScreen = ({navigation}) => {
 
   useEffect(() => {
     return navigation.addListener('focus', () => {
-      getFacilities(api_token).then(data => setFacilities(data));
+      getFacilities(api_token).then(data => {
+        setFacilities(data);
+      });
       if (lastSelectedFacility != 0) {
         getRequestInventory(api_token, lastSelectedFacility).then(data => {
           copyOfAllRequests = data;
@@ -118,13 +120,23 @@ export const RequestInventoryScreen = ({navigation}) => {
               if (value != '') lastSelectedFacility = value;
             }}
             mode={'dropdown'}>
-            {facilities.map((item, index) => (
-              <Picker.Item
-                key={index}
-                value={item.id}
-                label={item.facility_name}
-              />
-            ))}
+            {roles === 'admin'
+              ? facilities.map((item, index) => (
+                  <Picker.Item
+                    key={index}
+                    value={item.id}
+                    label={item.facility_name}
+                  />
+                ))
+              : facilities
+                  .filter(faci => faci.id === facility_id)
+                  .map((item, index) => (
+                    <Picker.Item
+                      key={index}
+                      value={item.id}
+                      label={item.facility_name}
+                    />
+                  ))}
           </Picker>
         </ErrorHandlingField>
         <TouchableOpacity onPress={() => setIsStatusFilterOpen(true)}>

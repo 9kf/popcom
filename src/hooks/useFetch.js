@@ -20,15 +20,18 @@ export const useFetch = () => {
         errorCallback();
         setError({message: 'Incorrect username or password'});
         setIsLoading(false);
+        console.log(res);
         return;
       }
 
       const json = await res.json();
+      console.log(json);
       setData(json);
       setIsLoading(false);
     } catch (e) {
       setError(e);
       setIsLoading(false);
+      console.log(e);
     }
   };
 

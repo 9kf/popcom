@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useContext} from 'react';
+import React, {useState, useEffect, useContext, useMemo} from 'react';
 
 import {
   View,
@@ -43,11 +43,15 @@ const FacilityPicker = ({facilities, selectedFacility, onChangeFacility}) => {
 export const InventoryScreen = ({navigation}) => {
   const [items, setItems] = useState([]);
   const {getUser} = useContext(AuthContext);
-  const {api_token} = getUser();
+  const {api_token, roles, facility_id} = getUser();
   const {data, errorMessage, isLoading, fetchData} = useFetch();
 
   const [facilities, setFacilities] = useState([]);
   const [selectedFacility, setSelectedFacility] = useState('');
+
+  const mSelectedFacility = useMemo(() => {
+    return selectedFacility;
+  }, [selectedFacility]);
 
   const [batches, setBatches] = useState([]);
 
@@ -72,6 +76,13 @@ export const InventoryScreen = ({navigation}) => {
     }
 
     const responseJson = await request.json();
+    if (roles != 'admin') {
+      const userFacility = responseJson.data.filter(
+        faci => faci.id === facility_id,
+      );
+      setFacilities(userFacility);
+      return;
+    }
     setFacilities(responseJson.data);
   };
 
@@ -96,18 +107,22 @@ export const InventoryScreen = ({navigation}) => {
     }
 
     const response = await request.json();
+    console.log(response.data, 'batch');
     setBatches(response.data);
   };
 
   useEffect(() => {
     return navigation.addListener('focus', () => {
       fetchItems();
-      fetchFacilities().then(() => getFacilityBatchById(lastSelectedFacility));
+      fetchFacilities().then(() => getFacilityBatchById(mSelectedFacility));
     });
   }, []);
 
   useEffect(() => {
-    if (data) setItems(data.data);
+    if (data) {
+      console.log(data.data, 'items');
+      setItems(data.data);
+    }
   }, [data]);
 
   useEffect(() => {
@@ -122,10 +137,9 @@ export const InventoryScreen = ({navigation}) => {
         RightComponent={
           <FacilityPicker
             facilities={facilities}
-            selectedFacility={selectedFacility}
+            selectedFacility={mSelectedFacility}
             onChangeFacility={sf => {
               setSelectedFacility(sf);
-              if (sf != '') lastSelectedFacility = sf;
             }}
           />
         }
@@ -144,7 +158,7 @@ export const InventoryScreen = ({navigation}) => {
             <ItemCard
               title={item.item_name}
               price={batches
-                .filter(batch => batch.item.id === item.id)
+                .filter(batch => batch.item_id === item.id)
                 .reduce((total, item) => {
                   return total + item.quantity;
                 }, 0)}
@@ -155,9 +169,9 @@ export const InventoryScreen = ({navigation}) => {
               type={1}>
               <InventoryExtension
                 navigation={navigation}
-                facilityId={selectedFacility}
+                facilityId={mSelectedFacility}
                 item={item}
-                itemDetails={batches.filter(batch => batch.item.id === item.id)}
+                itemDetails={batches.filter(batch => batch.item_id === item.id)}
               />
             </ItemCard>
           );

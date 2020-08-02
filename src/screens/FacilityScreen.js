@@ -186,7 +186,7 @@ export const FacilityScreen = ({route, navigation}) => {
             <ItemCard
               title={item.item_name}
               price={batches
-                .filter(batch => batch.item.id === item.id)
+                .filter(batch => batch.item_id === item.id)
                 .reduce((total, item) => {
                   return total + item.quantity;
                 }, 0)}
@@ -198,7 +198,7 @@ export const FacilityScreen = ({route, navigation}) => {
                 navigation={navigation}
                 facilityId={id}
                 item={item}
-                itemDetails={batches.filter(batch => batch.item.id === item.id)}
+                itemDetails={batches.filter(batch => batch.item_id === item.id)}
                 showAdjustInventory={false}
               />
             </ItemCard>

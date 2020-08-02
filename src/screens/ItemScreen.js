@@ -1,18 +1,11 @@
 import React, {useState, useEffect, useContext} from 'react';
-import {View, Text, StyleSheet, ScrollView, Picker} from 'react-native';
+import {View, Text, StyleSheet, ScrollView, Picker, Image} from 'react-native';
 import {Divider} from 'react-native-elements';
 import {CustomHeader, InfoBlock, ItemCard} from '../components';
 
-import {
-  getUserById,
-  getTagColor,
-  getTagLabelColor,
-  getTotalItemCount,
-} from '../utils/helper';
+import {getUserById, getTagColor, getTagLabelColor} from '../utils/helper';
 import {AuthContext} from '../context';
 import {POPCOM_URL, APP_THEME} from '../utils/constants';
-
-import {MockApiContext} from '../utils/mockAPI';
 
 const ItemExtension = ({itemDetails}) => {
   return (
@@ -63,9 +56,7 @@ export const ItemScreen = ({route, navigation}) => {
   } = route.params;
 
   const {getUser} = useContext(AuthContext);
-  const {api_token} = getUser();
-
-  const {lotNumbers} = useContext(MockApiContext);
+  const {api_token, roles, facility_id} = getUser();
 
   const [createdByUser, setCreatedByUser] = useState('');
   const [selectedFacility, setselectedFacility] = useState('');
@@ -93,7 +84,7 @@ export const ItemScreen = ({route, navigation}) => {
     }
 
     const response = await request.json();
-    const itemBatch = response.data.filter(data => data.item.id === id);
+    const itemBatch = response.data.filter(data => data.item_id === id);
     setItemBatches(itemBatch);
   };
 
@@ -109,6 +100,15 @@ export const ItemScreen = ({route, navigation}) => {
     }
 
     const responseJson = await request.json();
+
+    if (roles != 'admin') {
+      const userFacility = responseJson.data.filter(
+        faci => faci.id === facility_id,
+      );
+      setFacilities(userFacility);
+      return;
+    }
+
     setFacilities(responseJson.data);
   };
 
@@ -118,6 +118,7 @@ export const ItemScreen = ({route, navigation}) => {
   };
 
   useEffect(() => {
+    console.log(route.params);
     getUsers();
     getFacilities().then(() => {
       if (selectedFacility != '') getFacilityBatches();
@@ -130,6 +131,8 @@ export const ItemScreen = ({route, navigation}) => {
 
   return (
     <View style={styles.container}>
+      {/* {image && <Image source={image} resizeMode={'contain'} />} */}
+
       <CustomHeader
         title={item_name}
         type={1}
@@ -208,7 +211,11 @@ export const ItemScreen = ({route, navigation}) => {
 
         <ItemCard
           title={item_name}
-          price={getTotalItemCount(lotNumbers.filter(num => num.itemId === id))}
+          price={itemBatches
+            .filter(batch => batch.item_id === id)
+            .reduce((total, item) => {
+              return total + item.quantity;
+            }, 0)}
           defaultCollapsed={false}
           tag={category}
           tagColor={getTagColor(category)}

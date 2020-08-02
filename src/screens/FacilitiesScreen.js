@@ -27,7 +27,7 @@ const AddFacilityButton = ({navigation}) => (
 
 export const FacilitiesScreen = ({navigation}) => {
   const {getUser} = useContext(AuthContext);
-  const {api_token} = getUser();
+  const {api_token, roles, facility_id} = getUser();
   const {data, errorMessage, isLoading, fetchData} = useFetch();
 
   const [facilities, setFacilities] = useState([]);
@@ -46,6 +46,11 @@ export const FacilitiesScreen = ({navigation}) => {
 
   useEffect(() => {
     if (data) {
+      if (roles != 'admin') {
+        const userFacility = data.data.filter(faci => faci.id === facility_id);
+        setFacilities(userFacility);
+        return;
+      }
       setFacilities(data.data);
     }
   }, [data]);
@@ -55,7 +60,9 @@ export const FacilitiesScreen = ({navigation}) => {
       <CustomHeader
         title={'Facility'}
         LeftComponentFunc={() => navigation.openDrawer()}
-        RightComponent={<AddFacilityButton navigation={navigation} />}
+        {...roles === 'admin' && {
+          RightComponent: <AddFacilityButton navigation={navigation} />,
+        }}
       />
       <ScrollView
         showsVerticalScrollIndicator={false}

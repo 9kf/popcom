@@ -66,7 +66,7 @@ const ItemsOverlay = ({
 
 export const addRequestInventoryScreen = ({route, navigation}) => {
   const {getUser} = useContext(AuthContext);
-  const {api_token} = getUser();
+  const {api_token, roles, facility_id} = getUser();
 
   const [items, setItems] = useState([]);
   const [selectedItems, setSelectedItems] = useState([]);
@@ -233,13 +233,23 @@ export const addRequestInventoryScreen = ({route, navigation}) => {
               selectedValue={requestingFacility}
               onValueChange={(value, index) => setRequestingFacility(value)}
               mode={'dropdown'}>
-              {facilities.map((item, index) => (
-                <Picker.Item
-                  key={index}
-                  value={item.id}
-                  label={item.facility_name}
-                />
-              ))}
+              {roles === 'admin'
+                ? facilities.map((item, index) => (
+                    <Picker.Item
+                      key={index}
+                      value={item.id}
+                      label={item.facility_name}
+                    />
+                  ))
+                : facilities
+                    .filter(faci => faci.id === facility_id)
+                    .map((item, index) => (
+                      <Picker.Item
+                        key={index}
+                        value={item.id}
+                        label={item.facility_name}
+                      />
+                    ))}
             </Picker>
           </ErrorHandlingField>
 

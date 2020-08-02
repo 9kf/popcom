@@ -131,7 +131,7 @@ const CheckoutCount = ({onPressFunc, count = 0}) => (
 export const DispenseItemScreen = ({navigation}) => {
   const [items, setItems] = useState([]);
   const {getUser} = useContext(AuthContext);
-  const {api_token} = getUser();
+  const {api_token, roles, facility_id} = getUser();
   const {data, errorMessage, isLoading, fetchData} = useFetch();
 
   const [totalItemDispenseCount, setTotalItemDispenseCount] = useState(0);
@@ -159,8 +159,6 @@ export const DispenseItemScreen = ({navigation}) => {
 
     const responseJson = await request.json();
     setItems(responseJson.data);
-
-    // fetchData(endpoint, options, () => alert('Failed to get list of items'));
   };
 
   const fetchFacilities = async () => {
@@ -173,6 +171,13 @@ export const DispenseItemScreen = ({navigation}) => {
     }
 
     const responseJson = await request.json();
+    if (roles != 'admin') {
+      const userFacility = responseJson.data.filter(
+        faci => faci.id === facility_id,
+      );
+      setFacilities(userFacility);
+      return;
+    }
     setFacilities(responseJson.data);
   };
 

@@ -26,7 +26,7 @@ export const ItemMasterScreen = ({navigation}) => {
   const [items, setItems] = useState([]);
 
   const {getUser} = useContext(AuthContext);
-  const {api_token} = getUser();
+  const {api_token, roles, facility_id} = getUser();
 
   const {data, errorMessage, isLoading, fetchData} = useFetch();
 
@@ -44,7 +44,6 @@ export const ItemMasterScreen = ({navigation}) => {
   useEffect(() => {
     return navigation.addListener('focus', () => {
       fetchItems();
-      console.log(data);
     });
   }, []);
 
@@ -57,7 +56,9 @@ export const ItemMasterScreen = ({navigation}) => {
       <CustomHeader
         title={'Items'}
         LeftComponentFunc={() => navigation.openDrawer()}
-        RightComponent={<AddItemButton navigation={navigation} />}
+        {...roles === 'admin' && {
+          RightComponent: <AddItemButton navigation={navigation} />,
+        }}
       />
       <ScrollView
         showsVerticalScrollIndicator={false}

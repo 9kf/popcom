@@ -21,7 +21,7 @@ let copyOfAllRequests = [];
 
 export const ReceiveInventoryScreen = ({navigation}) => {
   const {getUser} = useContext(AuthContext);
-  const {api_token} = getUser();
+  const {api_token, roles, facility_id} = getUser();
 
   const [facilities, setFacilities] = useState([]);
   const [selectedFacility, setSelectedFacility] = useState(null);
@@ -74,7 +74,14 @@ export const ReceiveInventoryScreen = ({navigation}) => {
 
   useEffect(() => {
     return navigation.addListener('focus', () => {
-      getFacilities(api_token).then(data => setFacilities(data));
+      getFacilities(api_token).then(data => {
+        if (roles != 'admin') {
+          const userFacility = data.filter(faci => faci.id === facility_id);
+          setFacilities(userFacility);
+          return;
+        }
+        setFacilities(data);
+      });
       if (lastSelectedFacility != 0) {
         getTransferInventories(api_token, lastSelectedFacility).then(data => {
           mapRequests(data);
@@ -208,19 +215,6 @@ export const ReceiveInventoryScreen = ({navigation}) => {
                   This request has already been received
                 </Text>
               )}
-
-              {/* {request.transferDetails.status != 'in transit' && (
-                <Text
-                  style={{
-                    alignSelf: 'center',
-                    fontSize: 16,
-                    fontWeight: 'bold',
-                    marginTop: 12,
-                    color: APP_THEME.primaryColor,
-                  }}>
-                  This request has already been received
-                </Text>
-              )} */}
             </RequestCard>
           );
         })}

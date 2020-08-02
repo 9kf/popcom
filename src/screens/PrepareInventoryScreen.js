@@ -198,7 +198,7 @@ export const PrepareInventoryScreen = ({navigation}) => {
   const [isCheckoutVisible, setIsCheckoutVisible] = useState(false);
 
   const {getUser} = useContext(AuthContext);
-  const {api_token} = getUser();
+  const {api_token, roles, facility_id} = getUser();
 
   const [facilities, setFacilities] = useState([]);
   const [selectedFacility, setSelectedFacility] = useState(null);
@@ -255,7 +255,14 @@ export const PrepareInventoryScreen = ({navigation}) => {
 
   useEffect(() => {
     return navigation.addListener('focus', () => {
-      getFacilities(api_token).then(data => setFacilities(data));
+      getFacilities(api_token).then(data => {
+        if (roles != 'admin') {
+          const userFacility = data.filter(faci => faci.id === facility_id);
+          setFacilities(userFacility);
+          return;
+        }
+        setFacilities(data);
+      });
       if (lastSelectedFacility != 0)
         getRequestInventory(api_token, lastSelectedFacility).then(data => {
           copyOfAllRequests = data;
