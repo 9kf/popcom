@@ -1,30 +1,25 @@
 import React, {useContext, useState, useEffect} from 'react';
 
 import {View, Image, Text, ScrollView, StyleSheet} from 'react-native';
-
 import {Button} from 'react-native-elements';
-
-import {AuthContext} from '../context';
-
 import {CustomTextInput} from '../components';
 
-import {APP_THEME, POPCOM_URL} from '../utils/constants';
-
+import {AuthContext} from '../context';
+import {APP_THEME} from '../utils/constants';
 import {useFetch} from '../hooks';
+
+import {userLogin} from '../utils/routes';
+import {handleInputChange} from '../utils/helper';
 
 const logo = require('../../images/logo/popcom-logo.png');
 const title = require('../../images/title/title.png');
 
-const handleInputChange = setter => newText => {
-  setter(newText);
-};
-
-export const LoginScreen = () => {
+export const Login = () => {
   const {login} = useContext(AuthContext);
 
   const [userName, setUserName] = useState('');
   const [password, setPassword] = useState('');
-  const {data, isLoading, fetchData} = useFetch();
+  const {data, isLoading, doFetch, errorMessage} = useFetch();
 
   const resetForm = () => {
     setUserName('');
@@ -32,15 +27,7 @@ export const LoginScreen = () => {
   };
 
   const handleLogin = async ev => {
-    const endpoint =
-      POPCOM_URL + `/api/login?email=${userName}&password=${password}`;
-    const options = {
-      headers: {
-        accept: 'application/json',
-      },
-      method: 'post',
-    };
-    fetchData(endpoint, options, () => alert('Incorrect username or password'));
+    userLogin(userName, password, doFetch);
   };
 
   useEffect(() => {
@@ -49,6 +36,10 @@ export const LoginScreen = () => {
       resetForm();
     }
   }, [data]);
+
+  useEffect(() => {
+    if (errorMessage) alert(errorMessage);
+  }, [errorMessage]);
 
   return (
     <View style={styles.container}>
@@ -101,6 +92,7 @@ export const LoginScreen = () => {
 
 const styles = StyleSheet.create({
   container: {
+    backgroundColor: 'white',
     flex: 1,
     flexDirection: 'row',
   },

@@ -1,28 +1,18 @@
 import React, {useEffect, useContext} from 'react';
 import * as R from 'ramda';
 
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TextInput,
-  Picker,
-  Platform,
-} from 'react-native';
-
+import {View, Text, StyleSheet, ScrollView, TextInput} from 'react-native';
+import {Picker} from '@react-native-community/picker';
 import {
   CustomHeader,
   ErrorHandlingField,
   ImagePickerComponent,
 } from '../components';
-
 import {Button, Icon} from 'react-native-elements';
 
 import {AuthContext} from '../context';
-
-import {CATEGORIES, POPCOM_URL, APP_THEME} from '../utils/constants';
-
+import {CATEGORIES, APP_THEME} from '../utils/constants';
+import {createItem} from '../utils/routes';
 import {useForm, useFetch} from '../hooks';
 
 const FORM_KEYS = {
@@ -35,11 +25,11 @@ const FORM_KEYS = {
   API_TOKEN: 'api_token',
 };
 
-export const AddItemScreen = ({navigation}) => {
+export const AddItem = ({navigation}) => {
   const {getUser} = useContext(AuthContext);
   const {api_token} = getUser();
 
-  const {data, errorMessage, isLoading, fetchData} = useFetch();
+  const {data, errorMessage, isLoading, doFetch} = useFetch();
 
   const validate = formValues => {
     let errors = {};
@@ -55,46 +45,24 @@ export const AddItemScreen = ({navigation}) => {
         errors[FORM_KEYS[key]] = `${FORM_KEYS[key]} must not be empty`;
     });
 
-    console.log(errors);
     return errors;
-  };
-
-  const createFormData = (image, body) => {
-    const data = new FormData();
-
-    data.append('photo', {
-      name: image.fileName,
-      type: image.type,
-      uri:
-        Platform.OS === 'android'
-          ? image.uri
-          : image.uri.replace('file://', ''),
-    });
-
-    Object.keys(body).forEach(key => {
-      data.append(key, body[key]);
-    });
-
-    return data;
   };
 
   const addItem = async formValues => {
     const newValues = R.assoc(
       FORM_KEYS.IMAGE,
-      formValues[FORM_KEYS.IMAGE]?.data,
+      `data:${formValues[FORM_KEYS.IMAGE]?.type};base64,${
+        formValues[FORM_KEYS.IMAGE]?.data
+      }`,
       formValues,
     );
 
-    const options = {
-      headers: {
-        accept: 'application/json',
-        'Content-Type': 'application/json',
-      },
-      method: 'post',
-      body: JSON.stringify(newValues),
-    };
-    const endpoint = POPCOM_URL + `/api/create-item`;
-    fetchData(endpoint, options, () => alert('Failed to add the item'));
+    createItem(newValues, doFetch);
+  };
+
+  const handleBack = () => {
+    navigation.goBack();
+    resetForm();
   };
 
   const initialState = {
@@ -112,18 +80,18 @@ export const AddItemScreen = ({navigation}) => {
 
   useEffect(() => {
     if (data) {
-      navigation.navigate('ItemMaster');
-      resetForm();
+      handleBack();
     }
   }, [data]);
+
+  useEffect(() => {
+    if (errorMessage) alert(errorMessage);
+  }, [errorMessage]);
 
   return (
     <View style={styles.container}>
       <CustomHeader
-        LeftComponentFunc={() => {
-          resetForm();
-          navigation.navigate('ItemMaster');
-        }}
+        LeftComponentFunc={handleBack}
         title={'Create Item'}
         type={1}
       />
@@ -232,6 +200,6 @@ export const AddItemScreen = ({navigation}) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F9FC',
+    backgroundColor: 'white',
   },
 });

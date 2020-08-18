@@ -1,27 +1,25 @@
-import React, {useState, useEffect, useContext} from 'react';
+import React, {useState, useEffect, useContext, useMemo} from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  Picker,
   ScrollView,
   TouchableOpacity,
 } from 'react-native';
+import {Picker} from '@react-native-community/picker';
 import {Button, Icon} from 'react-native-elements';
 import {CustomHeader, RequestCard, ErrorHandlingField} from '../components';
 import {StatusOverlay} from '../overlays';
 
 import {AuthContext} from '../context';
-
 import {APP_THEME} from '../utils/constants';
+import {getFacilityNameFromId} from '../utils/helper';
 import {
   getFacilities,
-  getRequestInventory,
-  cancelRequestInventory,
-} from '../utils/api';
-
-let lastSelectedFacility = 0;
-let copyOfAllRequests = [];
+  getInventoryRequests,
+  cancelInventoryRequest,
+} from '../utils/routes';
+import {useFetch} from '../hooks';
 
 const AddItemButton = ({navigation}) => (
   <Button
@@ -35,65 +33,70 @@ export const RequestInventoryScreen = ({navigation}) => {
   const {getUser} = useContext(AuthContext);
   const {api_token, roles, facility_id} = getUser();
 
-  const [facilities, setFacilities] = useState([]);
+  const {data: facilities, doFetch: fetchFacilities} = useFetch();
+  const {data: inventoryRequests, doFetch: fetchInventoryRequests} = useFetch();
+
   const [selectedFacility, setSelectedFacility] = useState(null);
-  const [requests, setRequests] = useState([]);
+  const mSelectedFacility = useMemo(() => {
+    return selectedFacility;
+  }, [selectedFacility]);
 
   const [isStatusFilterOpen, setIsStatusFilterOpen] = useState(false);
   const [activeFilter, setActiveFilter] = useState('all');
 
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleCancel = async requestInventoryId => {
+  const mUserFacilities = useMemo(() => {
+    if (roles != 'admin' && facilities)
+      return facilities.filter(faci => faci.id === facility_id);
+
+    return facilities ?? [];
+  }, [facilities]);
+
+  const mRequests = useMemo(() => {
+    const pendingRequests = inventoryRequests
+      ? inventoryRequests.filter(request => request.status === 'pending')
+      : [];
+
+    if (activeFilter === 'pending')
+      return pendingRequests.filter(request => request.active);
+
+    if (activeFilter === 'cancelled')
+      return pendingRequests.filter(request => !request.active);
+
+    return pendingRequests;
+  }, [inventoryRequests, activeFilter]);
+
+  const handleCancel = requestInventoryId => async () => {
     setIsLoading(true);
-    const response = await cancelRequestInventory(
+    const response = await cancelInventoryRequest(
       api_token,
       requestInventoryId,
     );
     if (response) {
-      const updatedRequests = await getRequestInventory(
+      getInventoryRequests(
         api_token,
-        lastSelectedFacility,
+        mSelectedFacility,
+        fetchInventoryRequests,
       );
-      setRequests(updatedRequests);
     }
     setIsLoading(false);
   };
 
-  const filterData = (filter, data = copyOfAllRequests) => {
-    if (filter === 'all') {
-      setRequests(data);
-      return;
-    }
-
-    const filteredRequests = data.filter(data => data.status === filter);
-    setRequests(filteredRequests);
-  };
-
   useEffect(() => {
     return navigation.addListener('focus', () => {
-      getFacilities(api_token).then(data => {
-        setFacilities(data);
-      });
-      if (lastSelectedFacility != 0) {
-        getRequestInventory(api_token, lastSelectedFacility).then(data => {
-          copyOfAllRequests = data;
-          filterData(activeFilter, data);
-        });
-      }
+      getFacilities(api_token, fetchFacilities);
+      getInventoryRequests(
+        api_token,
+        mSelectedFacility,
+        fetchInventoryRequests,
+      );
     });
   }, []);
 
   useEffect(() => {
-    getRequestInventory(api_token, selectedFacility).then(data => {
-      copyOfAllRequests = data;
-      filterData(activeFilter, data);
-    });
+    getInventoryRequests(api_token, mSelectedFacility, fetchInventoryRequests);
   }, [selectedFacility]);
-
-  useEffect(() => {
-    filterData(activeFilter);
-  }, [activeFilter]);
 
   return (
     <View style={styles.container}>
@@ -120,23 +123,13 @@ export const RequestInventoryScreen = ({navigation}) => {
               if (value != '') lastSelectedFacility = value;
             }}
             mode={'dropdown'}>
-            {roles === 'admin'
-              ? facilities.map((item, index) => (
-                  <Picker.Item
-                    key={index}
-                    value={item.id}
-                    label={item.facility_name}
-                  />
-                ))
-              : facilities
-                  .filter(faci => faci.id === facility_id)
-                  .map((item, index) => (
-                    <Picker.Item
-                      key={index}
-                      value={item.id}
-                      label={item.facility_name}
-                    />
-                  ))}
+            {mUserFacilities.map((item, index) => (
+              <Picker.Item
+                key={index}
+                value={item.id}
+                label={item.facility_name}
+              />
+            ))}
           </Picker>
         </ErrorHandlingField>
         <TouchableOpacity onPress={() => setIsStatusFilterOpen(true)}>
@@ -153,19 +146,20 @@ export const RequestInventoryScreen = ({navigation}) => {
       <StatusOverlay
         isOpen={isStatusFilterOpen}
         setIsOpen={setIsStatusFilterOpen}
-        items={['all', 'pending']}
+        items={['all', 'pending', 'cancelled']}
         setActiveFilter={setActiveFilter}
       />
 
       <ScrollView>
-        {requests.map(request => {
-          const supplyingFacilityName = facilities.filter(
-            f => f.id === request.supplying_facility_id,
-          )[0]?.facility_name;
-          const receivingFacilityName = facilities.filter(
-            f => f.id === request.receiving_facility_id,
-          )[0]?.facility_name;
-
+        {mRequests.map(request => {
+          const supplyingFacilityName = getFacilityNameFromId(
+            request.supplying_facility_id,
+            facilities,
+          );
+          const receivingFacilityName = getFacilityNameFromId(
+            request.receiving_facility_id,
+            facilities,
+          );
           return (
             <RequestCard
               key={request.id}
@@ -204,14 +198,14 @@ export const RequestInventoryScreen = ({navigation}) => {
                   <Button
                     title={'Cancel'}
                     loading={isLoading}
-                    onPress={() => handleCancel(request.id)}
+                    onPress={handleCancel(request.id)}
                     buttonStyle={{backgroundColor: '#E74C3C', borderRadius: 8}}
                     containerStyle={{flexGrow: 1, margin: 12}}
                   />
                 </View>
               )}
 
-              {request.status != 'pending' && request.active === 1 && (
+              {/* {request.status != 'pending' && request.active === 1 && (
                 <Text
                   style={{
                     alignSelf: 'center',
@@ -223,7 +217,7 @@ export const RequestInventoryScreen = ({navigation}) => {
                   This request is waiting for confirmation from supplying
                   facility
                 </Text>
-              )}
+              )} */}
 
               {request.active === 0 && (
                 <Text
@@ -254,5 +248,6 @@ export const RequestInventoryScreen = ({navigation}) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: 'white',
   },
 });

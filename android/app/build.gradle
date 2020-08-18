@@ -132,8 +132,8 @@ android {
         applicationId "com.popcom"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 4
-        versionName "1.4"
+        versionCode 8
+        versionName "1.8"
     }
     splits {
         abi {
@@ -195,6 +195,7 @@ android {
 
 dependencies {
     implementation project(':react-native-maps')
+    implementation project(':react-native-fs')
     implementation fileTree(dir: "libs", include: ["*.jar"])
     //noinspection GradleDynamicVersion
     implementation "com.facebook.react:react-native:+"  // From node_modules

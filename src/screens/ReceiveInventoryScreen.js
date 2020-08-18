@@ -1,8 +1,9 @@
 import React, {useState, useEffect, useContext} from 'react';
 import * as R from 'ramda';
 
-import {View, Text, StyleSheet, Picker, ScrollView} from 'react-native';
+import {View, Text, StyleSheet, ScrollView} from 'react-native';
 import {Button, Icon} from 'react-native-elements';
+import {Picker} from '@react-native-community/picker';
 import {CustomHeader, RequestCard, ErrorHandlingField} from '../components';
 import {StatusOverlay} from '../overlays';
 
@@ -227,5 +228,6 @@ export const ReceiveInventoryScreen = ({navigation}) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: 'white',
   },
 });

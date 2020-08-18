@@ -132,7 +132,7 @@ export const DispenseItemScreen = ({navigation}) => {
   const [items, setItems] = useState([]);
   const {getUser} = useContext(AuthContext);
   const {api_token, roles, facility_id} = getUser();
-  const {data, errorMessage, isLoading, fetchData} = useFetch();
+  const {data, errorMessage, isLoading, doFetch} = useFetch();
 
   const [totalItemDispenseCount, setTotalItemDispenseCount] = useState(0);
   const [isCheckoutVisible, setIsCheckoutVisible] = useState(false);
@@ -188,16 +188,6 @@ export const DispenseItemScreen = ({navigation}) => {
     });
 
     return batchesCopy;
-  };
-
-  const addItemDispenseCountProp = items => {
-    let itemsCopy = [...items];
-
-    items.forEach((item, index) => {
-      itemsCopy[index] = {...item, totalDispenseCount: 0};
-    });
-
-    return itemsCopy;
   };
 
   const getFacilityBatchById = async () => {
@@ -348,7 +338,7 @@ export const DispenseItemScreen = ({navigation}) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F9FC',
+    backgroundColor: 'white',
   },
   itemDetailsLayout: {
     paddingVertical: 10,

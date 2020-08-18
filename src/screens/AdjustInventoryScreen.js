@@ -37,7 +37,6 @@ const AddBatchInventory = ({isOpen, setIsOpen, addBatch}) => {
   const [quantity, setQuantity] = useState(0);
 
   const onDateChange = (event, date) => {
-    console.log(date);
     setExpiryDate(date);
     setIsDatePickerOpen(false);
   };
@@ -193,7 +192,6 @@ export const AdjustInventoryScreen = ({route, navigation}) => {
     <View style={styles.container}>
       <CustomHeader
         LeftComponentFunc={() => {
-          // navigation.navigate('Inventory');
           navigation.goBack();
         }}
         title={'Adjust Inventory'}
@@ -319,7 +317,7 @@ export const AdjustInventoryScreen = ({route, navigation}) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F9FC',
+    backgroundColor: 'white',
   },
   tagStyle: {
     padding: 5,

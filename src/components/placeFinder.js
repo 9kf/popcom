@@ -4,20 +4,15 @@ import {
   Text,
   ScrollView,
   TouchableOpacity,
-  TouchableHighlight,
   TextInput,
   StyleSheet,
   Platform,
 } from 'react-native';
-
 import {Icon, Overlay, SearchBar, Card} from 'react-native-elements';
-
 import {ErrorHandlingField} from './errorHandlingField';
 
-import {APP_THEME, MAPBOX_SEARCH_URL, MAPBOX_API_KEY} from '../utils/constants';
-
-import {useFetch} from '../hooks/';
-
+import {APP_THEME} from '../utils/constants';
+import {searchPlace} from '../utils/routes';
 import {debounce} from '../utils/helper';
 
 const SuggestionItem = props => {
@@ -52,13 +47,14 @@ export const PlaceFinder = ({
   const [isSearchPlacesOpen, setIsSearchPlacesOpen] = useState(false);
   const [searchText, setSearchText] = useState('');
   const [suggestions, setSuggestions] = useState([]);
-  const {data, isLoading, fetchData} = useFetch();
 
   const getPlace = async () => {
-    const endpoint = `${MAPBOX_SEARCH_URL}/${searchText}.json?country=PH&limit=10&types=locality&access_token=${MAPBOX_API_KEY}`;
-    fetchData(endpoint, {}, () =>
-      alert('There was a problem retrieving the results'),
-    );
+    try {
+      const places = await searchPlace(searchText);
+      if (places) setSuggestions(places.features);
+    } catch (err) {
+      console.log(err);
+    }
   };
 
   const handleItemPress = item => {
@@ -71,10 +67,6 @@ export const PlaceFinder = ({
     if (searchText.trim() != '') getPlace();
     else setSuggestions([]);
   }, [searchText]);
-
-  useEffect(() => {
-    if (data) setSuggestions(data.features);
-  }, [data]);
 
   return (
     <View>
@@ -99,7 +91,6 @@ export const PlaceFinder = ({
             containerStyle={{
               borderRadius: 8,
             }}
-            showLoading={isLoading}
             inputStyle={{fontSize: 16, padding: 0}}
           />
         </Card>

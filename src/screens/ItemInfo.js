@@ -1,5 +1,6 @@
 import React, {useState, useEffect, useContext} from 'react';
-import {View, Text, StyleSheet, ScrollView, Picker, Image} from 'react-native';
+import {View, Text, StyleSheet, ScrollView, Image} from 'react-native';
+import {Picker} from '@react-native-community/picker';
 import {Divider} from 'react-native-elements';
 import {CustomHeader, InfoBlock, ItemCard} from '../components';
 
@@ -44,7 +45,7 @@ const ItemExtension = ({itemDetails}) => {
   );
 };
 
-export const ItemScreen = ({route, navigation}) => {
+export const ItemInfo = ({route, navigation}) => {
   const {
     category,
     image,
@@ -231,7 +232,7 @@ export const ItemScreen = ({route, navigation}) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F9FC',
+    backgroundColor: 'white',
   },
   dividerStyle: {color: '#B9BABA', height: 1, marginVertical: 10},
   itemDetailsLayout: {

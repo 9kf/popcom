@@ -1,16 +1,18 @@
 import React from 'react';
 
 import {View, Text, TouchableOpacity, Image} from 'react-native';
-
 import {Icon} from 'react-native-elements';
-
 import ImagePicker from 'react-native-image-picker';
 
+import {requestCameraPermission} from '../utils/helper';
+
 export const ImagePickerComponent = ({image, setImage, errorMessage}) => {
-  const launchGallery = () => {
-    ImagePicker.launchImageLibrary({}, response => {
-      setImage(response);
-    });
+  const launchGallery = async () => {
+    const permission = await requestCameraPermission();
+    if (permission)
+      ImagePicker.showImagePicker({}, response => {
+        setImage(response);
+      });
   };
 
   return (

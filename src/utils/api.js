@@ -1,5 +1,12 @@
 import {POPCOM_URL} from './constants';
 
+/**
+ *
+ * @param {string} userName
+ * @param {string} passWord
+ */
+export const login = async (userName, passWord) => {};
+
 export const getItems = async apiToken => {
   const endPoint = `${POPCOM_URL}/api/get-items`;
   const body = {

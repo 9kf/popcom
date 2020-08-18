@@ -1,40 +1,54 @@
-import React, {useState, useEffect, useContext} from 'react';
+import React, {useState, useEffect, useContext, useMemo} from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  Picker,
   ScrollView,
   TextInput,
   TouchableOpacity,
 } from 'react-native';
+import {Picker} from '@react-native-community/picker';
 import {Button, Icon, Overlay} from 'react-native-elements';
 import {CustomHeader, RequestCard, ErrorHandlingField} from '../components';
 import {StatusOverlay} from '../overlays';
 
 import {AuthContext} from '../context';
-
 import {APP_THEME} from '../utils/constants';
 import {
-  getFacilities,
-  getRequestInventory,
-  getFacilityBatches,
   transferInventory,
   declineRequest,
   updateTransferStatus,
 } from '../utils/api';
-
-let copyOfAllRequests = [];
-let lastSelectedFacility = 0;
+import {useFetch} from '../hooks';
+import {
+  getFacilities,
+  getInventoryRequests,
+  getBatchesByFacilityId,
+} from '../utils/routes';
 
 const CheckoutOverlay = ({isOpen, setIsOpen, items, apiToken, request}) => {
   const [message, setMessage] = useState('');
-  const [batches, setBatches] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+
+  const {data: batches, doFetch: fetchBatches, overrideData} = useFetch();
+
+  const mBatches = useMemo(() => {
+    const itemIds = items.map(item => {
+      return item.item.id;
+    });
+    return batches
+      ? batches
+          .filter(batch => itemIds.indexOf(batch.item_id) > -1)
+          .map(batch => {
+            if (!batch.preparedQuantity) return {...batch, preparedQuantity: 0};
+            else return batch;
+          })
+      : [];
+  }, [batches]);
 
   const handleConfirm = async () => {
     setIsLoading(true);
-    const toBeTransferredItems = batches
+    const toBeTransferredItems = mBatches
       .filter(batch => batch.preparedQuantity > 0)
       .map(batch => {
         return {
@@ -44,29 +58,26 @@ const CheckoutOverlay = ({isOpen, setIsOpen, items, apiToken, request}) => {
           uom: 'pcs',
         };
       });
-    await transferInventory(
+    const transferred = await transferInventory(
       apiToken,
       request.id,
       toBeTransferredItems,
       message,
     );
+
+    if (!transferred) alert('Not enough stock to transfer');
+
     setIsLoading(false);
     setIsOpen(false);
   };
 
   useEffect(() => {
     if (isOpen) {
-      getFacilityBatches(apiToken, request.supplying_facility_id).then(data => {
-        const itemIds = items.map(item => {
-          return item.item.id;
-        });
-        const selectedBatchItems = data
-          .filter(d => itemIds.indexOf(d.item.id) > -1)
-          .map(d => {
-            return {...d, preparedQuantity: 0};
-          });
-        setBatches(selectedBatchItems);
-      });
+      getBatchesByFacilityId(
+        apiToken,
+        request.supplying_facility_id,
+        fetchBatches,
+      );
     }
   }, [isOpen]);
 
@@ -93,9 +104,9 @@ const CheckoutOverlay = ({isOpen, setIsOpen, items, apiToken, request}) => {
         </View>
 
         <ScrollView>
-          {items.map(item => {
+          {items.map((item, index) => {
             return (
-              <View style={{marginVertical: 8}}>
+              <View key={index} style={{marginVertical: 8}}>
                 <View
                   style={{
                     flexDirection: 'row',
@@ -112,12 +123,16 @@ const CheckoutOverlay = ({isOpen, setIsOpen, items, apiToken, request}) => {
                 </View>
 
                 <View>
-                  {batches
+                  {mBatches
                     .filter(batch => batch.item_id === item.item.id)
-                    .map(batch => {
+                    .map((batch, index) => {
                       return (
                         <View
-                          style={{flexDirection: 'row', alignItems: 'center'}}>
+                          key={index}
+                          style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                          }}>
                           <Text>{batch.batch_name}</Text>
                           <View style={{flexGrow: 1}} />
                           <TextInput
@@ -138,7 +153,7 @@ const CheckoutOverlay = ({isOpen, setIsOpen, items, apiToken, request}) => {
                                 ...batches[index],
                                 preparedQuantity: parseInt(newText),
                               };
-                              setBatches(copyOfBatches);
+                              overrideData(copyOfBatches);
                             }}
                           />
                         </View>
@@ -186,6 +201,9 @@ const CheckoutOverlay = ({isOpen, setIsOpen, items, apiToken, request}) => {
             backgroundColor: APP_THEME.primaryColor,
             borderRadius: 8,
           }}
+          disabledStyle={{backgroundColor: 'gray'}}
+          disabledTitleStyle={{color: 'black'}}
+          disabled={mBatches.length === 0}
           containerStyle={{flexGrow: 1}}
           onPress={handleConfirm}
         />
@@ -195,15 +213,14 @@ const CheckoutOverlay = ({isOpen, setIsOpen, items, apiToken, request}) => {
 };
 
 export const PrepareInventoryScreen = ({navigation}) => {
-  const [isCheckoutVisible, setIsCheckoutVisible] = useState(false);
-
   const {getUser} = useContext(AuthContext);
   const {api_token, roles, facility_id} = getUser();
 
-  const [facilities, setFacilities] = useState([]);
-  const [selectedFacility, setSelectedFacility] = useState(null);
+  const [isCheckoutVisible, setIsCheckoutVisible] = useState(false);
 
-  const [requests, setRequests] = useState([]);
+  const {data: facilities, doFetch: fetchFacilities} = useFetch();
+  const {data: inventoryRequests, doFetch: fetchInventoryRequests} = useFetch();
+
   const [selectedRequest, setSelectedRequest] = useState(null);
 
   const [acceptedItems, setAcceptedItems] = useState([]);
@@ -213,15 +230,38 @@ export const PrepareInventoryScreen = ({navigation}) => {
 
   const [isLoading, setIsLoading] = useState(false);
 
+  const [selectedFacility, setSelectedFacility] = useState(null);
+
+  const mSelectedFacility = useMemo(() => {
+    return selectedFacility;
+  }, [selectedFacility]);
+
+  const mUserFacilities = useMemo(() => {
+    if (roles != 'admin' && facilities)
+      return facilities.filter(faci => faci.id === facility_id);
+
+    return facilities ?? [];
+  }, [facilities]);
+
+  const mRequests = useMemo(() => {
+    const activeRequests = inventoryRequests
+      ? inventoryRequests.filter(request => request.active)
+      : [];
+
+    if (activeFilter === 'all' && inventoryRequests) return activeRequests;
+
+    return activeRequests.filter(request => request.status === activeFilter);
+  }, [inventoryRequests, activeFilter]);
+
   const handleReject = async requestInventoryId => {
     setIsLoading(true);
     const response = await declineRequest(api_token, requestInventoryId);
     if (response) {
-      const updatedRequests = await getRequestInventory(
+      getInventoryRequests(
         api_token,
-        lastSelectedFacility,
+        mSelectedFacility,
+        fetchInventoryRequests,
       );
-      setRequests(updatedRequests);
     }
     setIsLoading(false);
   };
@@ -230,58 +270,38 @@ export const PrepareInventoryScreen = ({navigation}) => {
     setIsLoading(true);
     const response = await updateTransferStatus(api_token, inventoryTransferId);
     if (response) {
-      const updatedRequests = await getRequestInventory(
+      getInventoryRequests(
         api_token,
-        lastSelectedFacility,
+        mSelectedFacility,
+        fetchInventoryRequests,
       );
-      setRequests(updatedRequests);
     }
     setIsLoading(false);
   };
 
-  const filterData = (filter, data = copyOfAllRequests) => {
-    const activeData = data.filter(d => d.active);
-
-    if (filter === 'all') {
-      setRequests(activeData);
-      return;
-    }
-
-    const filteredRequests = activeData.filter(data => data.status === filter);
-    setRequests(filteredRequests);
-
-    setRequests(activeData);
-  };
-
   useEffect(() => {
     return navigation.addListener('focus', () => {
-      getFacilities(api_token).then(data => {
-        if (roles != 'admin') {
-          const userFacility = data.filter(faci => faci.id === facility_id);
-          setFacilities(userFacility);
-          return;
-        }
-        setFacilities(data);
-      });
-      if (lastSelectedFacility != 0)
-        getRequestInventory(api_token, lastSelectedFacility).then(data => {
-          copyOfAllRequests = data;
-
-          filterData(data);
-        });
+      getFacilities(api_token, fetchFacilities);
+      getInventoryRequests(
+        api_token,
+        mSelectedFacility,
+        fetchInventoryRequests,
+      );
     });
   }, []);
 
   useEffect(() => {
-    getRequestInventory(api_token, selectedFacility).then(data => {
-      copyOfAllRequests = data;
-      filterData(activeFilter, data);
-    });
+    getInventoryRequests(api_token, mSelectedFacility, fetchInventoryRequests);
   }, [selectedFacility]);
 
   useEffect(() => {
-    filterData(activeFilter);
-  }, [activeFilter]);
+    if (!isCheckoutVisible)
+      getInventoryRequests(
+        api_token,
+        mSelectedFacility,
+        fetchInventoryRequests,
+      );
+  }, [isCheckoutVisible]);
 
   return (
     <View style={styles.container}>
@@ -319,10 +339,9 @@ export const PrepareInventoryScreen = ({navigation}) => {
             selectedValue={selectedFacility}
             onValueChange={(value, index) => {
               setSelectedFacility(value);
-              if (value != '') lastSelectedFacility = value;
             }}
             mode={'dropdown'}>
-            {facilities.map((item, index) => (
+            {mUserFacilities.map((item, index) => (
               <Picker.Item
                 key={index}
                 value={item.id}
@@ -344,7 +363,7 @@ export const PrepareInventoryScreen = ({navigation}) => {
       </View>
 
       <ScrollView>
-        {requests
+        {mRequests
           .filter(request => request.supplying_facility_id === selectedFacility)
           .map(request => {
             const supplyingFacilityName = facilities.filter(
@@ -461,5 +480,6 @@ export const PrepareInventoryScreen = ({navigation}) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: 'white',
   },
 });

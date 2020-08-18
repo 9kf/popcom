@@ -39,9 +39,10 @@ export const StatusOverlay = ({isOpen, setIsOpen, items, setActiveFilter}) => {
         </View>
 
         <ScrollView style={{marginTop: 12}}>
-          {items.map(item => {
+          {items.map((item, index) => {
             return (
               <TouchableOpacity
+                key={index}
                 onPress={() => {
                   setActiveFilter(item);
                   setIsOpen(false);

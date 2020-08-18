@@ -1,31 +1,18 @@
 import React, {useState, useContext, useEffect} from 'react';
 import * as R from 'ramda';
 
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  TextInput,
-  Picker,
-} from 'react-native';
-
+import {View, Text, StyleSheet, ScrollView, TextInput} from 'react-native';
+import {Picker} from '@react-native-community/picker';
 import {
   CustomHeader,
   ErrorHandlingField,
   ImagePickerComponent,
   PlaceFinder,
 } from '../components';
-
 import {Button, Icon, Card} from 'react-native-elements';
 
-import ImagePicker from 'react-native-image-picker';
-
 import {AuthContext} from '../context';
-
 import {useFetch, useForm} from '../hooks';
-
 import {FACILITY_TYPE, POPCOM_URL, APP_THEME} from '../utils/constants';
 
 const FORM_KEYS = {
@@ -46,10 +33,10 @@ const FORM_KEYS = {
   API_TOKEN: 'api_token',
 };
 
-export const AddFacilityScreen = ({navigation}) => {
+export const AddFacility = ({navigation}) => {
   const {getUser} = useContext(AuthContext);
   const {api_token} = getUser();
-  const {data, isLoading, errorMessage, fetchData} = useFetch();
+  const {data, isLoading, errorMessage, doFetch} = useFetch();
 
   const getRequestBodyFromValues = formValues => {
     return R.pipe(
@@ -78,12 +65,10 @@ export const AddFacilityScreen = ({navigation}) => {
         errors[FORM_KEYS[key]] = `${FORM_KEYS[key]} must not be empty`;
     });
 
-    console.log(errors);
-
     return errors;
   };
 
-  const addFacility = async formValues => {
+  const createFacility = async formValues => {
     const requestBody = new URLSearchParams(
       getRequestBodyFromValues(formValues),
     );
@@ -94,7 +79,7 @@ export const AddFacilityScreen = ({navigation}) => {
       },
       method: 'post',
     };
-    fetchData(endpoint, options, () => alert('failed to create facility'));
+    doFetch(endpoint, options, () => alert('failed to create facility'));
   };
 
   const initialState = {
@@ -109,22 +94,23 @@ export const AddFacilityScreen = ({navigation}) => {
     resetForm,
     errors,
     formValues,
-  } = useForm(initialState, addFacility, validate);
+  } = useForm(initialState, createFacility, validate);
+
+  const handleBack = () => {
+    navigation.goBack();
+    resetForm();
+  };
 
   useEffect(() => {
     if (data) {
-      resetForm();
-      navigation.navigate('Facilities');
+      handleBack();
     }
   }, [data]);
 
   return (
     <View style={styles.container}>
       <CustomHeader
-        LeftComponentFunc={() => {
-          resetForm();
-          navigation.navigate('Facilities');
-        }}
+        LeftComponentFunc={handleBack}
         title={'Add Facility'}
         type={1}
       />
@@ -321,7 +307,7 @@ export const AddFacilityScreen = ({navigation}) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F9FC',
+    backgroundColor: 'white',
   },
 });
 

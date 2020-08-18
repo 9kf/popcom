@@ -1,10 +1,11 @@
 import React, {useState, useEffect} from 'react';
-import {View, AsyncStorage} from 'react-native';
 
-import {AuthContext} from './context';
-
+import {View} from 'react-native';
 import {DrawerNavigation} from './navigation';
-import {LoginScreen, SplashScreen} from './screens';
+import {Login, SplashScreen} from './screens';
+
+import AsyncStorage from '@react-native-community/async-storage';
+import {AuthContext} from './context';
 
 const App = () => {
   const [user, setUser] = useState(null);
@@ -26,9 +27,7 @@ const App = () => {
       await AsyncStorage.removeItem('user_data', () => setUser(null));
     },
     getUser: () => {
-      return user
-        ? user.data
-        : {first_name: 'ohoy', last_name: 'oyea', roles: 'huhuhu'};
+      return user;
     },
   };
 
@@ -56,9 +55,7 @@ const App = () => {
       {isRetrieving ? (
         <SplashScreen />
       ) : (
-        <View style={{flex: 1}}>
-          {user ? <DrawerNavigation /> : <LoginScreen />}
-        </View>
+        <View style={{flex: 1}}>{user ? <DrawerNavigation /> : <Login />}</View>
       )}
     </AuthContext.Provider>
   );

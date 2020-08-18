@@ -81,6 +81,14 @@ target 'popcom' do
 
   pod 'react-native-image-picker', :path => '../node_modules/react-native-image-picker'
 
+  pod 'RNCAsyncStorage', :path => '../node_modules/@react-native-community/async-storage'
+
+  pod 'RNCPicker', :path => '../node_modules/@react-native-community/picker'
+
+  pod 'RNFS', :path => '../node_modules/react-native-fs'
+
+  pod 'rn-fetch-blob', :path => '../node_modules/rn-fetch-blob'
+
   target 'popcomTests' do
     inherit! :complete
     # Pods for testing

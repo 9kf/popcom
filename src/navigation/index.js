@@ -1,2 +1,1 @@
-export * from './DrawerNav'
-export * from './HomeStackNav'
+export * from './DrawerNav';

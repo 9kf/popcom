@@ -1,39 +1,46 @@
-import React, {useState} from 'react';
+import {useState, useMemo} from 'react';
 
-export const useFetch = () => {
+export const useFetch = persistent => {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setError] = useState(null);
   const [data, setData] = useState(null);
 
-  const setDefaults = () => {
+  const clear = () => {
     setError(null);
     setData(null);
   };
 
-  const fetchData = async (url, options, errorCallback) => {
+  const doFetch = async (url, options) => {
     setIsLoading(true);
-    setDefaults();
+    setError(null);
     try {
       const res = await fetch(url, options);
-      // console.log(res);
-      if (!res.ok) {
-        errorCallback();
-        setError({message: 'Incorrect username or password'});
-        setIsLoading(false);
-        console.log(res);
+      const json = await res.json();
+      console.log(res);
+      if (!res.ok || !json.success) {
+        console.log(json);
+        setError('Something went wrong');
         return;
       }
 
-      const json = await res.json();
-      console.log(json);
-      setData(json);
-      setIsLoading(false);
+      if (persistent) {
+        const currentData = data ?? [];
+        setData([...currentData, ...json.data]);
+        return;
+      }
+
+      setData(json.data);
     } catch (e) {
-      setError(e);
-      setIsLoading(false);
       console.log(e);
+      setError(e);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  return {isLoading, errorMessage, data, fetchData};
+  const overrideData = data => {
+    setData(data);
+  };
+
+  return {isLoading, errorMessage, data, doFetch, clear, overrideData};
 };
