@@ -4,7 +4,7 @@ import {View, StyleSheet, ScrollView, RefreshControl, Text} from 'react-native';
 import {Picker} from '@react-native-community/picker';
 import {CustomHeader, ExtendedItemCard, ItemBatchInfo} from '../components';
 
-import {getTotalItemNumberOnBatch} from '../utils/helper';
+import {getTotalItemNumberOnBatch, insertCategories} from '../utils/helper';
 import {AuthContext} from '../context';
 import {getItems, getFacilities, getBatchesByFacilityId} from '../utils/routes';
 import {APP_THEME} from '../utils/constants';
@@ -40,7 +40,8 @@ export const Inventory = ({navigation}) => {
     data: items,
     isLoading: itemsLoading,
     doFetch: doFetchItems,
-  } = useFetch();
+    clear: clearItems,
+  } = useFetch(insertCategories(api_token));
   const {data: facilities, doFetch: doFetchFacilities} = useFetch();
   const {data: batches, doFetch: doFetchBatches} = useFetch();
 
@@ -71,6 +72,7 @@ export const Inventory = ({navigation}) => {
 
   useEffect(() => {
     return navigation.addListener('focus', () => {
+      clearItems();
       handleReloadItems()
         .then(handleGetFacilities)
         .then(() => handleGetBatches(mSelectedFacility));

@@ -6,6 +6,7 @@ import {
   ScrollView,
   TextInput,
   TouchableOpacity,
+  RefreshControl,
 } from 'react-native';
 import {Picker} from '@react-native-community/picker';
 import {Button, Icon, Overlay} from 'react-native-elements';
@@ -219,7 +220,11 @@ export const PrepareInventoryScreen = ({navigation}) => {
   const [isCheckoutVisible, setIsCheckoutVisible] = useState(false);
 
   const {data: facilities, doFetch: fetchFacilities} = useFetch();
-  const {data: inventoryRequests, doFetch: fetchInventoryRequests} = useFetch();
+  const {
+    data: inventoryRequests,
+    isLoading: loadingInventoryRequests,
+    doFetch: fetchInventoryRequests,
+  } = useFetch();
 
   const [selectedRequest, setSelectedRequest] = useState(null);
 
@@ -253,15 +258,15 @@ export const PrepareInventoryScreen = ({navigation}) => {
     return activeRequests.filter(request => request.status === activeFilter);
   }, [inventoryRequests, activeFilter]);
 
+  const handleReloadRequests = () => {
+    getInventoryRequests(api_token, mSelectedFacility, fetchInventoryRequests);
+  };
+
   const handleReject = async requestInventoryId => {
     setIsLoading(true);
     const response = await declineRequest(api_token, requestInventoryId);
     if (response) {
-      getInventoryRequests(
-        api_token,
-        mSelectedFacility,
-        fetchInventoryRequests,
-      );
+      handleReloadRequests();
     }
     setIsLoading(false);
   };
@@ -270,11 +275,7 @@ export const PrepareInventoryScreen = ({navigation}) => {
     setIsLoading(true);
     const response = await updateTransferStatus(api_token, inventoryTransferId);
     if (response) {
-      getInventoryRequests(
-        api_token,
-        mSelectedFacility,
-        fetchInventoryRequests,
-      );
+      handleReloadRequests();
     }
     setIsLoading(false);
   };
@@ -282,25 +283,16 @@ export const PrepareInventoryScreen = ({navigation}) => {
   useEffect(() => {
     return navigation.addListener('focus', () => {
       getFacilities(api_token, fetchFacilities);
-      getInventoryRequests(
-        api_token,
-        mSelectedFacility,
-        fetchInventoryRequests,
-      );
+      handleReloadRequests();
     });
   }, []);
 
   useEffect(() => {
-    getInventoryRequests(api_token, mSelectedFacility, fetchInventoryRequests);
+    handleReloadRequests();
   }, [selectedFacility]);
 
   useEffect(() => {
-    if (!isCheckoutVisible)
-      getInventoryRequests(
-        api_token,
-        mSelectedFacility,
-        fetchInventoryRequests,
-      );
+    if (!isCheckoutVisible) handleReloadRequests();
   }, [isCheckoutVisible]);
 
   return (
@@ -362,7 +354,14 @@ export const PrepareInventoryScreen = ({navigation}) => {
         </TouchableOpacity>
       </View>
 
-      <ScrollView>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={loadingInventoryRequests}
+            onRefresh={handleReloadRequests}
+          />
+        }>
         {mRequests
           .filter(request => request.supplying_facility_id === selectedFacility)
           .map(request => {

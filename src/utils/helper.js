@@ -1,22 +1,62 @@
-import {CATEGORIES, FACILITY_TYPE, POPCOM_URL} from './constants';
+import {FACILITY_TYPE, POPCOM_URL} from './constants';
 import {PermissionsAndroid} from 'react-native';
+import {getItemCategories} from '../utils/routes';
 
-export const getTagColor = categoryName => {
-  const category = CATEGORIES.filter(
-    item => item.name.toLocaleLowerCase() === categoryName.toLocaleLowerCase(),
-  )[0];
-  if (!category) return null;
-
-  return category.tagColor;
+export const getItemCategory = (categoryNumber, categories) => {
+  return (
+    categories?.filter(category => category.id === categoryNumber)[0] ?? null
+  );
 };
 
-export const getTagLabelColor = categoryName => {
-  const category = CATEGORIES.filter(
-    item => item.name.toLocaleLowerCase() === categoryName.toLocaleLowerCase(),
-  )[0];
-  if (!category) return null;
+export const insertCategories = apiToken => async items => {
+  const categories = await getItemCategories(apiToken);
+  const itemsWithCategoryColor = items.map(item => {
+    const categoryColor = getItemCategory(item.category, categories)?.hex_code;
+    const categoryName = getItemCategory(item.category, categories)
+      ?.category_name;
 
-  return category.tagLabelColor;
+    return {...item, category: categoryName, categoryColor: categoryColor};
+  });
+
+  return itemsWithCategoryColor;
+};
+
+export const colorShade = (col, amt) => {
+  if (!col) return '#000';
+
+  col = col.replace(/^#/, '');
+  if (col.length === 3)
+    col = col[0] + col[0] + col[1] + col[1] + col[2] + col[2];
+
+  let [r, g, b] = col.match(/.{2}/g);
+  [r, g, b] = [
+    parseInt(r, 16) + amt,
+    parseInt(g, 16) + amt,
+    parseInt(b, 16) + amt,
+  ];
+
+  r = Math.max(Math.min(255, r), 0).toString(16);
+  g = Math.max(Math.min(255, g), 0).toString(16);
+  b = Math.max(Math.min(255, b), 0).toString(16);
+
+  const rr = (r.length < 2 ? '0' : '') + r;
+  const gg = (g.length < 2 ? '0' : '') + g;
+  const bb = (b.length < 2 ? '0' : '') + b;
+
+  return `#${rr}${gg}${bb}`;
+};
+
+export const getUserFacilities = (roles, userFacilityId) => facilities => {
+  if (roles != 'admin' && facilities) {
+    return facilities.filter(faci => faci.id === userFacilityId);
+  }
+  return facilities;
+};
+
+export const getTagColor = () => {
+  const itemCategory = getItemCategory();
+
+  return itemCategory?.hex_code ?? '#fff';
 };
 
 export const getFacilityTypeTagColor = type => {

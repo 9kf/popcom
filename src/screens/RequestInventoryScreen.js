@@ -5,6 +5,7 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  RefreshControl,
 } from 'react-native';
 import {Picker} from '@react-native-community/picker';
 import {Button, Icon} from 'react-native-elements';
@@ -13,7 +14,7 @@ import {StatusOverlay} from '../overlays';
 
 import {AuthContext} from '../context';
 import {APP_THEME} from '../utils/constants';
-import {getFacilityNameFromId} from '../utils/helper';
+import {getFacilityNameFromId, getUserFacilities} from '../utils/helper';
 import {
   getFacilities,
   getInventoryRequests,
@@ -33,8 +34,14 @@ export const RequestInventoryScreen = ({navigation}) => {
   const {getUser} = useContext(AuthContext);
   const {api_token, roles, facility_id} = getUser();
 
-  const {data: facilities, doFetch: fetchFacilities} = useFetch();
-  const {data: inventoryRequests, doFetch: fetchInventoryRequests} = useFetch();
+  const {data: facilities, doFetch: fetchFacilities} = useFetch(
+    getUserFacilities(roles, facility_id),
+  );
+  const {
+    data: inventoryRequests,
+    isLoading: loadingInventoryRequests,
+    doFetch: fetchInventoryRequests,
+  } = useFetch();
 
   const [selectedFacility, setSelectedFacility] = useState(null);
   const mSelectedFacility = useMemo(() => {
@@ -45,13 +52,6 @@ export const RequestInventoryScreen = ({navigation}) => {
   const [activeFilter, setActiveFilter] = useState('all');
 
   const [isLoading, setIsLoading] = useState(false);
-
-  const mUserFacilities = useMemo(() => {
-    if (roles != 'admin' && facilities)
-      return facilities.filter(faci => faci.id === facility_id);
-
-    return facilities ?? [];
-  }, [facilities]);
 
   const mRequests = useMemo(() => {
     const pendingRequests = inventoryRequests
@@ -83,19 +83,19 @@ export const RequestInventoryScreen = ({navigation}) => {
     setIsLoading(false);
   };
 
+  const handleReloadRequests = () => {
+    getInventoryRequests(api_token, mSelectedFacility, fetchInventoryRequests);
+  };
+
   useEffect(() => {
     return navigation.addListener('focus', () => {
       getFacilities(api_token, fetchFacilities);
-      getInventoryRequests(
-        api_token,
-        mSelectedFacility,
-        fetchInventoryRequests,
-      );
+      handleReloadRequests();
     });
   }, []);
 
   useEffect(() => {
-    getInventoryRequests(api_token, mSelectedFacility, fetchInventoryRequests);
+    handleReloadRequests();
   }, [selectedFacility]);
 
   return (
@@ -123,13 +123,14 @@ export const RequestInventoryScreen = ({navigation}) => {
               if (value != '') lastSelectedFacility = value;
             }}
             mode={'dropdown'}>
-            {mUserFacilities.map((item, index) => (
-              <Picker.Item
-                key={index}
-                value={item.id}
-                label={item.facility_name}
-              />
-            ))}
+            {facilities &&
+              facilities.map((item, index) => (
+                <Picker.Item
+                  key={index}
+                  value={item.id}
+                  label={item.facility_name}
+                />
+              ))}
           </Picker>
         </ErrorHandlingField>
         <TouchableOpacity onPress={() => setIsStatusFilterOpen(true)}>
@@ -150,7 +151,14 @@ export const RequestInventoryScreen = ({navigation}) => {
         setActiveFilter={setActiveFilter}
       />
 
-      <ScrollView>
+      <ScrollView
+        refreshControl={
+          <RefreshControl
+            refreshing={loadingInventoryRequests}
+            onRefresh={handleReloadRequests}
+          />
+        }
+        showsVerticalScrollIndicator={false}>
         {mRequests.map(request => {
           const supplyingFacilityName = getFacilityNameFromId(
             request.supplying_facility_id,
@@ -204,20 +212,6 @@ export const RequestInventoryScreen = ({navigation}) => {
                   />
                 </View>
               )}
-
-              {/* {request.status != 'pending' && request.active === 1 && (
-                <Text
-                  style={{
-                    alignSelf: 'center',
-                    fontSize: 16,
-                    fontWeight: 'bold',
-                    marginTop: 12,
-                    color: APP_THEME.primaryColor,
-                  }}>
-                  This request is waiting for confirmation from supplying
-                  facility
-                </Text>
-              )} */}
 
               {request.active === 0 && (
                 <Text

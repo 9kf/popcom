@@ -28,6 +28,10 @@ export const api = {
     url: `${POPCOM_URL}/api/create-item`,
     options: defaultPostOptions,
   },
+  GET_ITEM_CATEGORIES: {
+    url: `${POPCOM_URL}/api/get-categories`,
+    options: defaultPostOptions,
+  },
   FACILITIES: {
     url: `${POPCOM_URL}/api/get-facilities`,
     options: defaultGetOptions,
@@ -62,6 +66,10 @@ export const api = {
   },
   CANCEL_INVENTORY_REQUEST: {
     url: `${POPCOM_URL}/api/cancel-request`,
+    options: defaultPostOptions,
+  },
+  DISPENSE_INVENTORY: {
+    url: `${POPCOM_URL}/api/dispense-inventory`,
     options: defaultPostOptions,
   },
 };

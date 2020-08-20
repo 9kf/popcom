@@ -1,5 +1,5 @@
 export * from './hamburger';
-export * from './header';
+export * from './CustomHeader';
 export * from './itemCard';
 export * from './counter';
 export * from './customTextInput';

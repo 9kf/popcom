@@ -4,8 +4,8 @@ import {Overlay, Button, Icon, Divider} from 'react-native-elements';
 import {APP_THEME} from '../utils/constants';
 import PropTypes from 'prop-types';
 import {AuthContext} from '../context';
-import {getTagColor, getTagLabelColor} from '../utils/helper';
-import {adjustInventory} from '../utils/api';
+import {colorShade} from '../utils/helper';
+import {dispenseInventory} from '../utils/routes';
 
 export const DispenseCheckoutOverlay = props => {
   const {getUser} = useContext(AuthContext);
@@ -21,9 +21,13 @@ export const DispenseCheckoutOverlay = props => {
       batch => batch.item.dispenseCount > 0,
     );
     for (const batch of tbCheckoutBatches) {
-      const newQuantity =
-        parseInt(batch.quantity) - parseInt(batch.item.dispenseCount);
-      promises.push(adjustInventory(api_token, batch.id, newQuantity));
+      promises.push(
+        dispenseInventory(
+          api_token,
+          batch.id,
+          parseInt(batch.item.dispenseCount),
+        ),
+      );
     }
 
     try {
@@ -62,69 +66,70 @@ export const DispenseCheckoutOverlay = props => {
         </View>
 
         <ScrollView>
-          {items
-            .filter(item => item.totalDispenseCount != 0)
-            .map((item, index) => {
-              return (
-                <View>
-                  <View key={index} style={{flexDirection: 'row'}}>
-                    <Text
-                      style={{
-                        fontWeight: 'bold',
-                        fontSize: 16,
-                        marginRight: 12,
-                      }}>{`x${item.totalDispenseCount}`}</Text>
-
-                    <View>
-                      <Text>{item.item_name}</Text>
-
-                      <View
+          {items &&
+            items
+              .filter(item => item.totalDispenseCount != 0)
+              .map((item, index) => {
+                return (
+                  <View key={index}>
+                    <View style={{flexDirection: 'row'}}>
+                      <Text
                         style={{
-                          ...styles.tagStyle,
-                          backgroundColor: getTagColor(item.category),
-                          marginBottom: 8,
-                        }}>
-                        <Icon
-                          name="edit"
-                          type="font-awesome-5"
-                          color={getTagLabelColor(item.category)}
-                          size={8}
-                          style={{marginRight: 4}}
-                        />
-                        <Text
+                          fontWeight: 'bold',
+                          fontSize: 16,
+                          marginRight: 12,
+                        }}>{`x${item.totalDispenseCount}`}</Text>
+
+                      <View>
+                        <Text>{item.item_name}</Text>
+
+                        <View
                           style={{
-                            ...styles.tagText,
-                            color: getTagLabelColor(item.category),
+                            ...styles.tagStyle,
+                            backgroundColor: item.categoryColor,
+                            marginBottom: 8,
                           }}>
-                          {item.category}
-                        </Text>
+                          <Icon
+                            name="edit"
+                            type="font-awesome-5"
+                            color={colorShade(item.categoryColor)}
+                            size={8}
+                            style={{marginRight: 4}}
+                          />
+                          <Text
+                            style={{
+                              ...styles.tagText,
+                              color: colorShade(item.categoryColor),
+                            }}>
+                            {item.category}
+                          </Text>
+                        </View>
+
+                        {batches
+                          .filter(
+                            batch =>
+                              batch.item.id === item.id &&
+                              batch.item.dispenseCount > 0,
+                          )
+                          .map(batch => {
+                            return (
+                              <Text
+                                style={{color: '#B7B7B7', fontSize: 12}}>{`(x${
+                                batch.item.dispenseCount
+                              }) ${batch.batch_name} Exp. ${new Date(
+                                batch.expiration_date.split(' ')[0],
+                              ).toLocaleDateString()}`}</Text>
+                            );
+                          })}
                       </View>
-
-                      {batches
-                        .filter(
-                          batch =>
-                            batch.item.id === item.id &&
-                            batch.item.dispenseCount > 0,
-                        )
-                        .map(batch => {
-                          return (
-                            <Text
-                              style={{color: '#B7B7B7', fontSize: 12}}>{`(x${
-                              batch.item.dispenseCount
-                            }) ${batch.batch_name} Exp. ${new Date(
-                              batch.expiration_date.split(' ')[0],
-                            ).toLocaleDateString()}`}</Text>
-                          );
-                        })}
                     </View>
-                  </View>
 
-                  <Divider
-                    style={{backgroundColor: '#B7B7B7', marginVertical: 12}}
-                  />
-                </View>
-              );
-            })}
+                    <Divider
+                      style={{backgroundColor: '#B7B7B7', marginVertical: 12}}
+                    />
+                  </View>
+                );
+              })}
         </ScrollView>
 
         <View

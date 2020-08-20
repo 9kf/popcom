@@ -3,11 +3,9 @@ import React, {useState} from 'react';
 import {View, TouchableHighlight, Image} from 'react-native';
 import {Icon, Text} from 'react-native-elements';
 
-import {useFetch} from '../hooks';
-
 const logo = require('../../images/logo/popcom-logo.png');
 
-export const CollapsibleItemBlock = ({item, children}) => {
+export const CollapsibleItemBlock = ({image, title, subTitle, children}) => {
   const [isCollapsed, setIsCollapsed] = useState(true);
 
   const handleBlockPress = () => setIsCollapsed(!isCollapsed);
@@ -26,18 +24,12 @@ export const CollapsibleItemBlock = ({item, children}) => {
           }}>
           <Image
             style={{height: 32, width: 32, marginRight: 10}}
-            source={
-              item?.image
-                ? {uri: `https://popcom.app/images/${item.image}`}
-                : logo
-            }
+            source={image ? {uri: `https://popcom.app/images/${image}`} : logo}
             resizeMode={'contain'}
           />
           <View style={{flexGrow: 1}}>
-            <Text style={{fontSize: 16, fontWeight: 'bold'}}>
-              {item.item_name}
-            </Text>
-            <Text style={{fontSize: 12}}>{item.category}</Text>
+            <Text style={{fontSize: 16, fontWeight: 'bold'}}>{title}</Text>
+            <Text style={{fontSize: 12}}>{subTitle}</Text>
           </View>
           <Icon
             name={isCollapsed ? 'chevron-down' : 'chevron-up'}

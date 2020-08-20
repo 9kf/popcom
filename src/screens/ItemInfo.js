@@ -1,117 +1,119 @@
-import React, {useState, useEffect, useContext} from 'react';
-import {View, Text, StyleSheet, ScrollView, Image} from 'react-native';
+import React, {useState, useEffect, useContext, useMemo} from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  Image,
+  RefreshControl,
+} from 'react-native';
 import {Picker} from '@react-native-community/picker';
 import {Divider} from 'react-native-elements';
-import {CustomHeader, InfoBlock, ItemCard} from '../components';
+import {
+  CustomHeader,
+  InfoBlock,
+  CollapsibleItemBlock,
+  ItemBatchInfo,
+  ErrorHandlingField,
+} from '../components';
 
-import {getUserById, getTagColor, getTagLabelColor} from '../utils/helper';
+import {APP_THEME} from '../utils/constants';
+import {getUserById, getUserFacilities} from '../utils/helper';
 import {AuthContext} from '../context';
-import {POPCOM_URL, APP_THEME} from '../utils/constants';
+import {getFacilities, getFacilityLedger} from '../utils/routes';
+import {useFetch} from '../hooks';
 
-const ItemExtension = ({itemDetails}) => {
+const logo = require('../../images/logo/popcom-logo.png');
+
+import {createMaterialTopTabNavigator} from '@react-navigation/material-top-tabs';
+const Tab = createMaterialTopTabNavigator();
+
+const ItemDetails = props => {
+  const {category, image, item_description, item_sku} = props;
+
   return (
-    <View style={styles.itemDetailsLayout}>
-      <View style={{flexDirection: 'row'}}>
-        <View style={{flex: 1, paddingLeft: 12}}>
-          <Text style={styles.itemDetailsHeader}>BATCH/LOT NO.</Text>
-          {itemDetails.map((item, index) => {
-            return (
-              <Text key={index} style={{fontWeight: 'bold'}}>
-                {item.batch_name}
-              </Text>
-            );
-          })}
-        </View>
-        <View style={{flex: 1, alignItems: 'center'}}>
-          <Text style={styles.itemDetailsHeader}>EXPIRY DATE</Text>
-          {itemDetails.map((item, index) => {
-            return (
-              <Text key={index} style={{color: '#C0C0C0'}}>
-                {new Date(
-                  item.expiration_date.split(' ')[0],
-                ).toLocaleDateString()}
-              </Text>
-            );
-          })}
-        </View>
-        <View style={{flex: 1, alignItems: 'center'}}>
-          <Text style={styles.itemDetailsHeader}>QTY</Text>
-          {itemDetails.map((item, index) => {
-            return <Text key={index}>{`${item.quantity} ea`}</Text>;
-          })}
-        </View>
+    <ScrollView
+      style={styles.tabContainer}
+      showsVerticalScrollIndicator={false}>
+      <View>
+        <Image
+          style={{height: 150, width: '100%', marginBottom: 12}}
+          source={image ? {uri: `https://popcom.app/images/${image}`} : logo}
+          resizeMode={'contain'}
+        />
+
+        <InfoBlock
+          header={'Barcode / SKU'}
+          subHeader={item_sku}
+          iconName={'barcode'}
+          containerStyle={{
+            marginVertical: 8,
+          }}
+        />
+
+        <InfoBlock
+          header={'Category'}
+          subHeader={category}
+          iconName={'edit'}
+          containerStyle={{
+            marginVertical: 8,
+          }}
+        />
+
+        <InfoBlock
+          header={'Description'}
+          subHeader={item_description}
+          iconName={'list'}
+          containerStyle={{
+            marginVertical: 8,
+          }}
+        />
       </View>
-    </View>
+    </ScrollView>
+  );
+};
+
+const ItemInventory = props => {
+  const {facilities, navigation, item, loadingFacilities} = props;
+
+  return (
+    <ScrollView
+      showsVerticalScrollIndicator={false}
+      style={styles.tabContainer}
+      refreshControl={<RefreshControl refreshing={loadingFacilities} />}>
+      {facilities &&
+        facilities.map((facility, index) => {
+          return (
+            <CollapsibleItemBlock
+              key={index}
+              title={facility.facility_name}
+              subTitle={facility.address}>
+              <ItemBatchInfo
+                navigation={navigation}
+                facilityId={facility.id}
+                item={item}
+              />
+            </CollapsibleItemBlock>
+          );
+        })}
+    </ScrollView>
   );
 };
 
 export const ItemInfo = ({route, navigation}) => {
-  const {
-    category,
-    image,
-    item_description,
-    item_name,
-    item_sku,
-    created_by,
-    id,
-  } = route.params;
+  const {item_name, created_by} = route.params;
 
   const {getUser} = useContext(AuthContext);
   const {api_token, roles, facility_id} = getUser();
 
+  const {
+    data: facilities,
+    isLoading: loadingFacilities,
+    doFetch: fetchFacilities,
+    clear: clearFacilities,
+  } = useFetch(getUserFacilities(roles, facility_id));
+
   const [createdByUser, setCreatedByUser] = useState('');
-  const [selectedFacility, setselectedFacility] = useState('');
-  const [facilities, setFacilities] = useState([]);
-
-  const [itemBatches, setItemBatches] = useState([]);
-
-  const getFacilityBatches = async () => {
-    const endpoint = `${POPCOM_URL}/api/get-facility-batches`;
-    const request = await fetch(endpoint, {
-      method: 'post',
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        api_token: api_token,
-        facility_id: selectedFacility,
-      }),
-    });
-
-    if (!request.ok) {
-      alert('failed to get batches');
-      return;
-    }
-
-    const response = await request.json();
-    const itemBatch = response.data.filter(data => data.item_id === id);
-    setItemBatches(itemBatch);
-  };
-
-  const getFacilities = async () => {
-    const urlParams = new URLSearchParams({api_token});
-    const endpoint = `${POPCOM_URL}/api/get-facilities?${urlParams.toString()}`;
-
-    const request = await fetch(endpoint);
-
-    if (!request.ok) {
-      alert('failed to get list of facilities');
-      return;
-    }
-
-    const responseJson = await request.json();
-
-    if (roles != 'admin') {
-      const userFacility = responseJson.data.filter(
-        faci => faci.id === facility_id,
-      );
-      setFacilities(userFacility);
-      return;
-    }
-
-    setFacilities(responseJson.data);
-  };
 
   const getUsers = async () => {
     const createdBy = await getUserById(created_by, api_token);
@@ -119,21 +121,19 @@ export const ItemInfo = ({route, navigation}) => {
   };
 
   useEffect(() => {
-    console.log(route.params);
     getUsers();
-    getFacilities().then(() => {
-      if (selectedFacility != '') getFacilityBatches();
-    });
+    getFacilities(api_token, fetchFacilities);
   }, [route]);
 
   useEffect(() => {
-    getFacilityBatches();
-  }, [selectedFacility]);
+    return navigation.addListener('focus', () => {
+      clearFacilities();
+      getFacilities(api_token, fetchFacilities);
+    });
+  }, []);
 
   return (
     <View style={styles.container}>
-      {/* {image && <Image source={image} resizeMode={'contain'} />} */}
-
       <CustomHeader
         title={item_name}
         type={1}
@@ -143,88 +143,30 @@ export const ItemInfo = ({route, navigation}) => {
         subHeader={`Created by: ${createdByUser}`}
       />
 
-      <ScrollView showsVerticalScrollIndicator={false}>
-        <View style={{paddingHorizontal: 24, marginBottom: 12}}>
-          <Divider style={styles.dividerStyle} />
-
-          <Text style={{color: '#B9BABA', fontSize: 16}}>ITEM DETAILS</Text>
-
-          <InfoBlock
-            header={'Barcode / SKU'}
-            subHeader={item_sku}
-            iconName={'barcode'}
-            containerStyle={{
-              marginLeft: 12,
-              marginVertical: 8,
-            }}
-          />
-
-          <InfoBlock
-            header={'Category'}
-            subHeader={category}
-            iconName={'edit'}
-            containerStyle={{
-              marginLeft: 12,
-              marginVertical: 8,
-            }}
-          />
-
-          <InfoBlock
-            header={'Description'}
-            subHeader={item_description}
-            iconName={'list'}
-            containerStyle={{
-              marginLeft: 12,
-              marginVertical: 8,
-            }}
-          />
-
-          <Divider style={styles.dividerStyle} />
-
-          <Text style={{color: '#B9BABA', fontSize: 16}}>Inventory</Text>
-
-          <Text
-            style={{
-              color: 'gray',
-              fontSize: 12,
-              marginTop: 12,
-              marginLeft: 4,
-              marginBottom: 2,
-            }}>
-            Facility
-          </Text>
-          <View style={APP_THEME.inputContainerStyle}>
-            <Picker
-              style={{height: 37}}
-              selectedValue={selectedFacility}
-              onValueChange={(value, index) => setselectedFacility(value)}
-              mode={'dropdown'}>
-              {facilities.map((item, index) => (
-                <Picker.Item
-                  key={index}
-                  value={item.id}
-                  label={item.facility_name}
-                />
-              ))}
-            </Picker>
-          </View>
-        </View>
-
-        <ItemCard
-          title={item_name}
-          price={itemBatches
-            .filter(batch => batch.item_id === id)
-            .reduce((total, item) => {
-              return total + item.quantity;
-            }, 0)}
-          defaultCollapsed={false}
-          tag={category}
-          tagColor={getTagColor(category)}
-          tagLabelColor={getTagLabelColor(category)}
-          type={1}>
-          <ItemExtension itemDetails={itemBatches} />
-        </ItemCard>
-      </ScrollView>
+      <Tab.Navigator
+        initialRouteName="Info"
+        swipeEnabled
+        tabBarOptions={{
+          activeTintColor: 'green',
+          inactiveTintColor: 'gray',
+          indicatorStyle: {backgroundColor: 'green'},
+          labelStyle: {fontSize: 10},
+          style: {backgroundColor: styles.container.backgroundColor},
+        }}>
+        <Tab.Screen name="Info" options={{tabBarLabel: 'Info'}}>
+          {props => <ItemDetails {...route.params} />}
+        </Tab.Screen>
+        <Tab.Screen name="Inventory" options={{tabBarLabel: 'Inventory'}}>
+          {props => (
+            <ItemInventory
+              item={route.params}
+              loadingFacilities={loadingFacilities}
+              facilities={facilities}
+              navigation={navigation}
+            />
+          )}
+        </Tab.Screen>
+      </Tab.Navigator>
     </View>
   );
 };
@@ -232,6 +174,11 @@ export const ItemInfo = ({route, navigation}) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: 'white',
+  },
+  tabContainer: {
+    flex: 1,
+    padding: 16,
     backgroundColor: 'white',
   },
   dividerStyle: {color: '#B9BABA', height: 1, marginVertical: 10},

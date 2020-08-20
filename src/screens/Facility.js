@@ -1,31 +1,24 @@
-import React, {useEffect, useState, useContext, useRef, useMemo} from 'react';
-import {
-  View,
-  StyleSheet,
-  ScrollView,
-  Image,
-  TouchableHighlight,
-} from 'react-native';
+import React, {useEffect, useState, useContext, useRef} from 'react';
+import {View, StyleSheet, ScrollView, Image} from 'react-native';
 import {
   CustomHeader,
   TextCombo,
   CollapsibleItemBlock,
   ItemBatchInfo,
 } from '../components';
-import {Text, Icon, Button} from 'react-native-elements';
+import {Text} from 'react-native-elements';
 
 import MapView, {PROVIDER_GOOGLE, Marker} from 'react-native-maps';
 
 import {AuthContext} from '../context';
 import {
   getUserById,
-  getLocalDateFromExpiration,
   pastTense,
   getNumberOfActiveItems,
+  insertCategories,
 } from '../utils/helper';
 import {APP_THEME} from '../utils/constants';
-import {getItems, getFacilityBatches} from '../utils/api';
-import {getFacilityLedger, getFacility} from '../utils/routes';
+import {getFacilityLedger, getFacility, getItems} from '../utils/routes';
 import {useFetch} from '../hooks';
 
 import {createMaterialTopTabNavigator} from '@react-navigation/material-top-tabs';
@@ -196,17 +189,22 @@ const FacilityInventory = props => {
   return (
     <View style={styles.tabContainer}>
       <ScrollView showsVerticalScrollIndicator={false}>
-        {items.map((item, index) => {
-          return (
-            <CollapsibleItemBlock key={index} item={item}>
-              <ItemBatchInfo
-                navigation={navigation}
-                facilityId={facilityId}
-                item={item}
-              />
-            </CollapsibleItemBlock>
-          );
-        })}
+        {items &&
+          items.map((item, index) => {
+            return (
+              <CollapsibleItemBlock
+                key={index}
+                image={item.image}
+                title={item.item_name}
+                subTitle={item.category}>
+                <ItemBatchInfo
+                  navigation={navigation}
+                  facilityId={facilityId}
+                  item={item}
+                />
+              </CollapsibleItemBlock>
+            );
+          })}
       </ScrollView>
     </View>
   );
@@ -290,10 +288,11 @@ export const Facility = ({route, navigation}) => {
 
   const {data: ledger, doFetch: fetchLedger} = useFetch();
   const {data: facilityInfo, doFetch: fetchFacilityInfo} = useFetch();
+  const {data: items, doFetch: fetchItems} = useFetch(
+    insertCategories(api_token),
+  );
 
   const [createdByUser, setCreatedByUser] = useState('');
-
-  const [items, setItems] = useState([]);
 
   const getUsersData = async () => {
     const createdBy = await getUserById(created_by, api_token);
@@ -306,9 +305,7 @@ export const Facility = ({route, navigation}) => {
 
   useEffect(() => {
     return navigation.addListener('focus', () => {
-      getItems(api_token).then(data => {
-        setItems(data);
-      });
+      getItems(api_token, fetchItems);
     });
   }, []);
 

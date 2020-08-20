@@ -1,5 +1,4 @@
 import React, {useEffect, useContext, useState} from 'react';
-import * as R from 'ramda';
 
 import {
   View,
@@ -7,7 +6,6 @@ import {
   StyleSheet,
   ScrollView,
   TextInput,
-  Picker,
   TouchableOpacity,
 } from 'react-native';
 
@@ -27,7 +25,7 @@ import {CATEGORIES, POPCOM_URL, APP_THEME} from '../utils/constants';
 
 import {useForm, useFetch} from '../hooks';
 
-import {getTagColor, getTagLabelColor} from '../utils/helper';
+import {colorShade} from '../utils/helper';
 
 const AddBatchInventory = ({isOpen, setIsOpen, addBatch}) => {
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
@@ -145,13 +143,13 @@ const AddBatchInventory = ({isOpen, setIsOpen, addBatch}) => {
   );
 };
 
-export const AdjustInventoryScreen = ({route, navigation}) => {
+export const AdjustInventory = ({route, navigation}) => {
   const {getUser} = useContext(AuthContext);
   const {api_token} = getUser();
 
   const {facility_id} = route.params;
 
-  const {category, item_name, id} = route.params.item;
+  const {category, item_name, id, categoryColor} = route.params.item;
 
   const [isAddBatchOpen, setIsAddBatchOpen] = useState(false);
   const [batches, setBatches] = useState([]);
@@ -211,21 +209,21 @@ export const AdjustInventoryScreen = ({route, navigation}) => {
         <View
           style={{
             ...styles.tagStyle,
-            backgroundColor: getTagColor(category),
+            backgroundColor: categoryColor,
             marginRight: 4,
             alignSelf: 'flex-start',
           }}>
           <Icon
             name="edit"
             type="font-awesome-5"
-            color={getTagLabelColor(category)}
+            color={colorShade(categoryColor)}
             size={12}
             style={{marginRight: 4}}
           />
           <Text
             style={{
               ...styles.tagText,
-              color: getTagLabelColor(category),
+              color: colorShade(categoryColor),
               textTransform: 'capitalize',
             }}>
             {category}
@@ -255,9 +253,10 @@ export const AdjustInventoryScreen = ({route, navigation}) => {
         </View>
       </View>
 
-      {batches.map(batch => {
+      {batches.map((batch, index) => {
         return (
           <View
+            key={index}
             style={{
               paddingHorizontal: 20,
               paddingBottom: 12,

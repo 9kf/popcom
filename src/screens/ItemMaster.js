@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useContext} from 'react';
+import React, {useEffect, useContext} from 'react';
 
 import {View, StyleSheet, ScrollView, RefreshControl, Text} from 'react-native';
 import {Button, Icon} from 'react-native-elements';
@@ -8,6 +8,7 @@ import {APP_THEME} from '../utils/constants';
 import {AuthContext} from '../context';
 import {useFetch} from '../hooks';
 import {getItems} from '../utils/routes';
+import {insertCategories} from '../utils/helper';
 
 const AddItemButton = ({onPress}) => (
   <Button
@@ -21,10 +22,12 @@ export const ItemMaster = ({navigation}) => {
   const {getUser} = useContext(AuthContext);
   const {api_token, roles} = getUser();
 
-  const {data: items, errorMessage, isLoading, doFetch} = useFetch();
+  const {data: items, errorMessage, isLoading, doFetch: fetchItems} = useFetch(
+    insertCategories(api_token),
+  );
 
   const handleReloadItems = async () => {
-    getItems(api_token, doFetch);
+    getItems(api_token, fetchItems);
   };
 
   const handleAddItem = () => {
@@ -67,7 +70,11 @@ export const ItemMaster = ({navigation}) => {
                 <Text style={APP_THEME.cardTitleDefaultStyle}>
                   {item.item_name}
                 </Text>
-                <ItemTag tag={item.category} />
+                <ItemTag
+                  tagName={item.category}
+                  tagColor={item.categoryColor}
+                  iconName={'edit'}
+                />
               </ItmCard>
             );
           })}

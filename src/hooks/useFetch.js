@@ -1,6 +1,6 @@
 import {useState, useMemo} from 'react';
 
-export const useFetch = persistent => {
+export const useFetch = callBack => {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setError] = useState(null);
   const [data, setData] = useState(null);
@@ -23,9 +23,8 @@ export const useFetch = persistent => {
         return;
       }
 
-      if (persistent) {
-        const currentData = data ?? [];
-        setData([...currentData, ...json.data]);
+      if (callBack) {
+        setData(await callBack(json.data));
         return;
       }
 

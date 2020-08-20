@@ -31,6 +31,36 @@ export const createItem = async (fields, doFetch) => {
   doFetch(api.CREATE_ITEM.url, options);
 };
 
+export const getItemCategories = async apiToken => {
+  const options = {
+    ...api.GET_ITEM_CATEGORIES.options,
+    body: JSON.stringify({
+      api_token: apiToken,
+    }),
+  };
+
+  const request = await fetch(api.GET_ITEM_CATEGORIES.url, options);
+  const jsonResponse = await request.json();
+
+  if (!request.ok || !jsonResponse.success) {
+    alert('There was a problem getting item categories');
+    return;
+  }
+
+  return jsonResponse.data;
+};
+
+export const getItemCategoriesWithHook = (apiToken, doFetch) => {
+  const options = {
+    ...api.GET_ITEM_CATEGORIES.options,
+    body: JSON.stringify({
+      api_token: apiToken,
+    }),
+  };
+
+  doFetch(api.GET_ITEM_CATEGORIES.url, options);
+};
+
 export const getFacilities = async (apiToken, doFetch) => {
   doFetch(
     `${api.FACILITIES.url}?api_token=${apiToken}`,
@@ -150,6 +180,30 @@ export const cancelInventoryRequest = async (apiToken, requestId) => {
   };
   try {
     const request = await fetch(api.CANCEL_INVENTORY_REQUEST.url, options);
+    const response = await request.json();
+
+    if (!request.ok || !response.success) {
+      alert('Something went wrong');
+      return false;
+    }
+
+    return true;
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+export const dispenseInventory = async (apiToken, batchId, quantity) => {
+  const options = {
+    ...api.DISPENSE_INVENTORY.options,
+    body: JSON.stringify({
+      api_token: apiToken,
+      batch_id: batchId,
+      quantity: quantity,
+    }),
+  };
+  try {
+    const request = await fetch(api.DISPENSE_INVENTORY.url, options);
     const response = await request.json();
 
     if (!request.ok || !response.success) {

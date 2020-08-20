@@ -1,5 +1,4 @@
 import React, {useEffect, useContext} from 'react';
-import * as R from 'ramda';
 
 import {View, Text, StyleSheet, ScrollView, TextInput} from 'react-native';
 import {Picker} from '@react-native-community/picker';
@@ -11,8 +10,8 @@ import {
 import {Button, Icon} from 'react-native-elements';
 
 import {AuthContext} from '../context';
-import {CATEGORIES, APP_THEME} from '../utils/constants';
-import {createItem} from '../utils/routes';
+import {APP_THEME} from '../utils/constants';
+import {createItem, getItemCategoriesWithHook} from '../utils/routes';
 import {useForm, useFetch} from '../hooks';
 
 const FORM_KEYS = {
@@ -29,19 +28,22 @@ export const AddItem = ({navigation}) => {
   const {getUser} = useContext(AuthContext);
   const {api_token} = getUser();
 
-  const {data, errorMessage, isLoading, doFetch} = useFetch();
+  const {data: itemCreated, errorMessage, isLoading, doFetch} = useFetch();
+  const {data: categories, doFetch: fetchItemCategories} = useFetch();
 
   const validate = formValues => {
     let errors = {};
-    const newValues = R.assoc(
-      FORM_KEYS.IMAGE,
-      formValues[FORM_KEYS.IMAGE]?.data,
-      formValues,
-    );
+    const newValues = {
+      ...formValues,
+      [FORM_KEYS.IMAGE]: formValues[FORM_KEYS.IMAGE]?.data,
+    };
 
     //required fields must not be empty
     Object.keys(FORM_KEYS).forEach((key, index) => {
-      if (!newValues[FORM_KEYS[key]] || newValues[FORM_KEYS[key]].trim() === '')
+      if (
+        !newValues[FORM_KEYS[key]] ||
+        newValues[FORM_KEYS[key]].toString().trim() === ''
+      )
         errors[FORM_KEYS[key]] = `${FORM_KEYS[key]} must not be empty`;
     });
 
@@ -49,13 +51,12 @@ export const AddItem = ({navigation}) => {
   };
 
   const addItem = async formValues => {
-    const newValues = R.assoc(
-      FORM_KEYS.IMAGE,
-      `data:${formValues[FORM_KEYS.IMAGE]?.type};base64,${
+    const newValues = {
+      ...formValues,
+      [FORM_KEYS.IMAGE]: `data:${formValues[FORM_KEYS.IMAGE]?.type};base64,${
         formValues[FORM_KEYS.IMAGE]?.data
       }`,
-      formValues,
-    );
+    };
 
     createItem(newValues, doFetch);
   };
@@ -66,7 +67,7 @@ export const AddItem = ({navigation}) => {
   };
 
   const initialState = {
-    [FORM_KEYS.CATEGORY]: CATEGORIES[0].name,
+    [FORM_KEYS.CATEGORY]: 1,
     [FORM_KEYS.API_TOKEN]: api_token,
     [FORM_KEYS.STATUS]: '1',
   };
@@ -79,10 +80,16 @@ export const AddItem = ({navigation}) => {
   } = useForm(initialState, addItem, validate);
 
   useEffect(() => {
-    if (data) {
+    return navigation.addListener('focus', () => {
+      getItemCategoriesWithHook(api_token, fetchItemCategories);
+    });
+  }, []);
+
+  useEffect(() => {
+    if (itemCreated) {
       handleBack();
     }
-  }, [data]);
+  }, [itemCreated]);
 
   useEffect(() => {
     if (errorMessage) alert(errorMessage);
@@ -152,9 +159,14 @@ export const AddItem = ({navigation}) => {
                 onFieldValueChange(FORM_KEYS.CATEGORY, value)
               }
               mode={'dropdown'}>
-              {CATEGORIES.map((item, index) => (
-                <Picker.Item key={index} value={item.name} label={item.name} />
-              ))}
+              {categories &&
+                categories.map((item, index) => (
+                  <Picker.Item
+                    key={index}
+                    value={item.id}
+                    label={item.category_name}
+                  />
+                ))}
             </Picker>
           </ErrorHandlingField>
           <ErrorHandlingField

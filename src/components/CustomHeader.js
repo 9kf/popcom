@@ -58,6 +58,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     color: '#333333',
+    width: '90%',
   },
   subHeaderStyle: {
     fontSize: 12,

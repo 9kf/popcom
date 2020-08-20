@@ -1,15 +1,8 @@
 import React, {useState, useContext, useEffect} from 'react';
 import * as R from 'ramda';
 
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  RefreshControl,
-  Picker,
-} from 'react-native';
-
+import {View, Text, StyleSheet, ScrollView, RefreshControl} from 'react-native';
+import {Picker} from '@react-native-community/picker';
 import {
   CustomHeader,
   ItemCard,
@@ -21,8 +14,9 @@ import {Button} from 'react-native-elements';
 
 import {DispenseCheckoutOverlay} from '../overlays';
 
-import {getTagColor, getTagLabelColor} from '../utils/helper';
+import {colorShade, insertCategories} from '../utils/helper';
 import {AuthContext} from '../context';
+import {getItems} from '../utils/routes';
 import {POPCOM_URL, APP_THEME} from '../utils/constants';
 
 import {useFetch} from '../hooks';
@@ -128,11 +122,16 @@ const CheckoutCount = ({onPressFunc, count = 0}) => (
   />
 );
 
-export const DispenseItemScreen = ({navigation}) => {
-  const [items, setItems] = useState([]);
+export const DispenseItem = ({navigation}) => {
   const {getUser} = useContext(AuthContext);
   const {api_token, roles, facility_id} = getUser();
-  const {data, errorMessage, isLoading, doFetch} = useFetch();
+
+  const {
+    data: items,
+    isLoading,
+    doFetch: fetchItems,
+    overrideData: setItems,
+  } = useFetch(insertCategories(api_token));
 
   const [totalItemDispenseCount, setTotalItemDispenseCount] = useState(0);
   const [isCheckoutVisible, setIsCheckoutVisible] = useState(false);
@@ -141,25 +140,6 @@ export const DispenseItemScreen = ({navigation}) => {
   const [selectedFacility, setSelectedFacility] = useState('');
 
   const [batches, setBatches] = useState([]);
-
-  const fetchItems = async () => {
-    const endpoint = `${POPCOM_URL}/api/get-items?api_token=${api_token}`;
-    const options = {
-      headers: {
-        accept: 'application/json',
-      },
-      method: 'post',
-    };
-    const request = await fetch(endpoint, options);
-
-    if (!request.ok) {
-      console.log('error');
-      return;
-    }
-
-    const responseJson = await request.json();
-    setItems(responseJson.data);
-  };
 
   const fetchFacilities = async () => {
     const endpoint = `${POPCOM_URL}/api/get-facilities?api_token=${api_token}`;
@@ -216,7 +196,7 @@ export const DispenseItemScreen = ({navigation}) => {
 
   useEffect(() => {
     return navigation.addListener('focus', () => {
-      fetchItems();
+      getItems(api_token, fetchItems);
       fetchFacilities();
     });
   }, []);
@@ -226,25 +206,27 @@ export const DispenseItemScreen = ({navigation}) => {
   }, [selectedFacility]);
 
   useEffect(() => {
-    let itemsCopy = [...items];
-    let nonZeroDispenseCount = 0;
+    if (items) {
+      let itemsCopy = [...items];
+      let nonZeroDispenseCount = 0;
 
-    items.forEach((item, index) => {
-      const totalDispenseCount = batches
-        .filter(batch => batch.item.id === item.id)
-        .reduce((total, batch) => {
-          return total + parseInt(batch.item.dispenseCount);
-        }, 0);
-      nonZeroDispenseCount += totalDispenseCount;
+      items.forEach((item, index) => {
+        const totalDispenseCount = batches
+          .filter(batch => batch.item.id === item.id)
+          .reduce((total, batch) => {
+            return total + parseInt(batch.item.dispenseCount);
+          }, 0);
+        nonZeroDispenseCount += totalDispenseCount;
 
-      itemsCopy[index] = {
-        ...itemsCopy[index],
-        totalDispenseCount: totalDispenseCount,
-      };
-    });
+        itemsCopy[index] = {
+          ...itemsCopy[index],
+          totalDispenseCount: totalDispenseCount,
+        };
+      });
 
-    setTotalItemDispenseCount(nonZeroDispenseCount);
-    setItems(itemsCopy);
+      setTotalItemDispenseCount(nonZeroDispenseCount);
+      setItems(itemsCopy);
+    }
   }, [batches]);
 
   return (
@@ -300,36 +282,40 @@ export const DispenseItemScreen = ({navigation}) => {
             onRefresh={() => fetchItems()}
           />
         }>
-        {items.map((item, index) => {
-          return (
-            <ItemCard
-              title={item.item_name}
-              price={batches
-                .filter(batch => batch.item.id === item.id)
-                .reduce((total, item) => {
-                  return total + parseInt(item.quantity);
-                }, 0)}
-              tag={item.category}
-              count={item.totalDispenseCount ? item.totalDispenseCount : 0}
-              tagColor={getTagColor(item.category)}
-              tagLabelColor={getTagLabelColor(item.category)}
-              showAdjustInventoryButton={true}
-              type={1}>
-              <DispenseItemsExtension
-                itemDetails={batches.filter(batch => batch.item.id === item.id)}
-                setItemDetails={(newItemDetails, batchId, itemId) => {
-                  let batchCopy = [...batches];
-                  batchCopy[
-                    batches.findIndex(batch => {
-                      return batch.id === batchId;
-                    })
-                  ] = newItemDetails;
-                  setBatches(batchCopy);
-                }}
-              />
-            </ItemCard>
-          );
-        })}
+        {items &&
+          items.map((item, index) => {
+            return (
+              <ItemCard
+                key={index}
+                title={item.item_name}
+                price={batches
+                  .filter(batch => batch.item.id === item.id)
+                  .reduce((total, item) => {
+                    return total + parseInt(item.quantity);
+                  }, 0)}
+                tag={item.category}
+                count={item.totalDispenseCount ? item.totalDispenseCount : 0}
+                tagColor={item.categoryColor}
+                tagLabelColor={colorShade(item.categoryColor)}
+                showAdjustInventoryButton={true}
+                type={1}>
+                <DispenseItemsExtension
+                  itemDetails={batches.filter(
+                    batch => batch.item.id === item.id,
+                  )}
+                  setItemDetails={(newItemDetails, batchId, itemId) => {
+                    let batchCopy = [...batches];
+                    batchCopy[
+                      batches.findIndex(batch => {
+                        return batch.id === batchId;
+                      })
+                    ] = newItemDetails;
+                    setBatches(batchCopy);
+                  }}
+                />
+              </ItemCard>
+            );
+          })}
       </ScrollView>
     </View>
   );

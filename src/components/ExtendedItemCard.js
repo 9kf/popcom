@@ -9,6 +9,7 @@ import {APP_THEME} from '../utils/constants';
 export const ExtendedItemCard = ({
   title,
   category,
+  categoryColor,
   numberOfPieces,
   numberOfDispensedItems,
   children,
@@ -32,8 +33,16 @@ export const ExtendedItemCard = ({
             <View style={{flexGrow: 1}}>
               <Text style={APP_THEME.cardTitleDefaultStyle}>{title}</Text>
               <View style={{flexDirection: 'row'}}>
-                <ItemTag tag={category} />
-                <ItemTag tag={`${numberOfPieces} ea`} />
+                <ItemTag
+                  tagName={category}
+                  tagColor={categoryColor}
+                  iconName={'edit'}
+                />
+                <ItemTag
+                  tagName={`${numberOfPieces} ea`}
+                  tagColor={'#D9D9D9'}
+                  iconName={'shopping-cart'}
+                />
               </View>
             </View>
             <View style={{marginLeft: 4}}>

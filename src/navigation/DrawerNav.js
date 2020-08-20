@@ -8,7 +8,7 @@ import {
   Home,
   ItemMaster,
   Inventory,
-  DispenseItemScreen,
+  DispenseItem,
   Facilities,
   AddItem,
   AddFacility,
@@ -18,7 +18,7 @@ import {
   PrepareInventoryScreen,
   ReceiveInventoryScreen,
   addRequestInventoryScreen,
-  AdjustInventoryScreen,
+  AdjustInventory,
   GenerateReport,
 } from '../screens';
 
@@ -33,7 +33,7 @@ export const DrawerNavigation = () => {
         <DrawerNav.Screen name="Home" component={Home} />
         <DrawerNav.Screen name="ItemMaster" component={ItemMaster} />
         <DrawerNav.Screen name="Inventory" component={Inventory} />
-        <DrawerNav.Screen name="Dispense" component={DispenseItemScreen} />
+        <DrawerNav.Screen name="Dispense" component={DispenseItem} />
         <DrawerNav.Screen name="Facilities" component={Facilities} />
         <DrawerNav.Screen name="AddItem" component={AddItem} />
         <DrawerNav.Screen name="AddFacility" component={AddFacility} />
@@ -55,10 +55,7 @@ export const DrawerNavigation = () => {
           name="AddRequestInventory"
           component={addRequestInventoryScreen}
         />
-        <DrawerNav.Screen
-          name="AdjustInventory"
-          component={AdjustInventoryScreen}
-        />
+        <DrawerNav.Screen name="AdjustInventory" component={AdjustInventory} />
         <DrawerNav.Screen name="GenerateReport" component={GenerateReport} />
       </DrawerNav.Navigator>
     </NavigationContainer>
