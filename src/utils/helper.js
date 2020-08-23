@@ -158,7 +158,7 @@ export const pastTense = word => {
       return 'adjusted';
     case 'dispense':
       return 'dispensed';
-    case 'trasfer':
+    case 'transfer':
       return 'transferred';
     case 'receive':
       return 'received';

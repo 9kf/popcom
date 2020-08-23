@@ -49,13 +49,13 @@ export const ReceiveInventoryScreen = ({navigation}) => {
 
     copyOfAllRequests = newRequestData;
 
-    if (activeFilter != 'all') {
-      const filteredRequests = newRequestData.filter(
-        data => data.transferDetails.status === activeFilter,
-      );
-      setRequests(filteredRequests);
-      return;
-    }
+    // if (activeFilter != 'all') {
+    //   const filteredRequests = newRequestData.filter(
+    //     data => data.transferDetails.status === activeFilter,
+    //   );
+    //   setRequests(filteredRequests);
+    //   return;
+    // }
 
     setRequests(newRequestData);
   };
@@ -93,7 +93,9 @@ export const ReceiveInventoryScreen = ({navigation}) => {
 
   useEffect(() => {
     if (selectedFacility) {
+      console.log(selectedFacility);
       getTransferInventories(api_token, selectedFacility).then(data => {
+        console.log(data);
         mapRequests(data);
       });
     }
