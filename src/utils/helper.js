@@ -1,24 +1,35 @@
 import {FACILITY_TYPE, POPCOM_URL} from './constants';
 import {PermissionsAndroid} from 'react-native';
-import {getItemCategories} from '../utils/routes';
+import {getItemCategories, getFacilityTypes} from '../utils/routes';
 
-export const getItemCategory = (categoryNumber, categories) => {
-  return (
-    categories?.filter(category => category.id === categoryNumber)[0] ?? null
-  );
+export const getElementById = (elementId, elements) => {
+  return elements?.filter(element => element.id === elementId)[0] ?? null;
 };
 
 export const insertCategories = apiToken => async items => {
   const categories = await getItemCategories(apiToken);
   const itemsWithCategoryColor = items.map(item => {
-    const categoryColor = getItemCategory(item.category, categories)?.hex_code;
-    const categoryName = getItemCategory(item.category, categories)
+    const categoryColor = getElementById(item.category, categories)?.hex_code;
+    const categoryName = getElementById(item.category, categories)
       ?.category_name;
 
     return {...item, category: categoryName, categoryColor: categoryColor};
   });
 
   return itemsWithCategoryColor;
+};
+
+export const insertFacilityTypes = apiToken => async facilities => {
+  const facilityTypes = await getFacilityTypes(apiToken);
+  const facilitiesWithTypes = facilities.map(faci => {
+    const type = getElementById(faci.facility_type, facilityTypes)?.type;
+    const typeColor = getElementById(faci.facility_type, facilityTypes)
+      ?.hex_code;
+
+    return {...faci, facilityType: type, facilityTypeColor: typeColor};
+  });
+
+  return facilitiesWithTypes;
 };
 
 export const colorShade = (col, amt) => {
@@ -83,6 +94,10 @@ export const debounce = (func, wait, immediate) => {
   };
 };
 
+export const getFullNameOfUser = userObj => {
+  return userObj ? `${userObj?.first_name} ${userObj?.last_name}` : '';
+};
+
 export const getUserById = async (userID, apiToken) => {
   const urlParams = new URLSearchParams({
     user_id: userID,
@@ -137,6 +152,10 @@ export const pipe = (...funcs) => arg => {
   funcs.reduce((value, func) => func(value), arg);
 };
 
+export const pipeAsync = (...funcs) => arg => {
+  funcs.reduce((value, func) => value.then(func), Promise.resolve(arg));
+};
+
 export const getTotalItemNumberOnBatch = (batches, itemId) => {
   if (batches)
     return batches
@@ -175,22 +194,6 @@ export const getFacilityNameFromId = (facilityId, facilities) => {
 
 export const getNumberOfActiveItems = items => {
   return items?.filter(item => item?.status === '1').length;
-};
-
-export const blobToFile = (theBlob, fileName) => {
-  theBlob.lastModifiedDate = new Date();
-  theBlob.name = fileName;
-  return theBlob;
-};
-
-export const blobToBase64 = blob => {
-  const reader = new FileReader();
-  reader.readAsDataURL(blob);
-  return new Promise(resolve => {
-    reader.onloadend = () => {
-      resolve(reader.result);
-    };
-  });
 };
 
 export const requestWriteExternalStoragePermission = async () => {

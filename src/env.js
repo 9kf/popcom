@@ -20,6 +20,14 @@ export const api = {
     url: `${POPCOM_URL}/api/login`,
     options: defaultPostOptions,
   },
+  GET_USERS: {
+    url: `${POPCOM_URL}/api/get-users`,
+    options: defaultPostOptions,
+  },
+  GET_USER_BY_ID: {
+    url: `${POPCOM_URL}/api/get-user`,
+    options: defaultPostOptions,
+  },
   ITEMS: {
     url: `${POPCOM_URL}/api/get-items`,
     options: defaultPostOptions,
@@ -36,8 +44,20 @@ export const api = {
     url: `${POPCOM_URL}/api/get-facilities`,
     options: defaultGetOptions,
   },
+  GET_FACILITY_TYPES: {
+    url: `${POPCOM_URL}/api/get-facility-types`,
+    options: defaultPostOptions,
+  },
   GET_FACILITY: {
     url: `${POPCOM_URL}/api/get-facility`,
+    options: defaultPostOptions,
+  },
+  CREATE_FACILITY: {
+    url: `${POPCOM_URL}/api/create-facility`,
+    options: defaultPostOptions,
+  },
+  ADD_FACILITY_USER: {
+    url: `${POPCOM_URL}/api/add-facility-user`,
     options: defaultPostOptions,
   },
   BATCHES: {

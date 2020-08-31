@@ -16,3 +16,4 @@ export * from './ReceiveInventoryScreen';
 export * from './AddRequestInventoryScreen';
 export * from './AdjustInventory';
 export * from './GenerateReport';
+export * from './AddUser';

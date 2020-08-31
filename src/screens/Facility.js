@@ -1,24 +1,28 @@
-import React, {useEffect, useState, useContext, useRef} from 'react';
-import {View, StyleSheet, ScrollView, Image} from 'react-native';
+import React, {useEffect, useContext, useRef, useState} from 'react';
+import {View, StyleSheet, ScrollView, Image, Platform} from 'react-native';
 import {
   CustomHeader,
   TextCombo,
   CollapsibleItemBlock,
   ItemBatchInfo,
 } from '../components';
-import {Text} from 'react-native-elements';
+import {Text, SearchBar, Button, Icon} from 'react-native-elements';
 
 import MapView, {PROVIDER_GOOGLE, Marker} from 'react-native-maps';
-
 import {AuthContext} from '../context';
 import {
-  getUserById,
   pastTense,
   getNumberOfActiveItems,
   insertCategories,
+  getFullNameOfUser,
 } from '../utils/helper';
 import {APP_THEME} from '../utils/constants';
-import {getFacilityLedger, getFacility, getItems} from '../utils/routes';
+import {
+  getUserById,
+  getFacilityLedger,
+  getFacility,
+  getItems,
+} from '../utils/routes';
 import {useFetch} from '../hooks';
 
 import {createMaterialTopTabNavigator} from '@react-navigation/material-top-tabs';
@@ -30,7 +34,7 @@ const FacilityInfo = props => {
   const {
     address,
     created_by,
-    facility_type,
+    facilityType,
     latitude,
     longitude,
     province,
@@ -49,7 +53,7 @@ const FacilityInfo = props => {
       <Text style={styles.facilityInfoHeader}>Basics</Text>
       <TextCombo
         title={'Facility Type'}
-        subTitle={facility_type}
+        subTitle={facilityType}
         containerStyle={{marginTop: 8}}
       />
       <View
@@ -157,16 +161,71 @@ const FacilityInfo = props => {
 };
 
 const FacilityUsers = props => {
-  const {users} = props;
+  const {users, navigation, facilityName, facilityId, roles} = props;
+
+  const [_facilityUsers, setFacilityUsers] = useState([]);
+  const [searchText, setSearchText] = useState('');
+
+  const filterUser = name => {
+    if (name === '') setFacilityUsers(users);
+
+    const filteredUsers = users.filter(
+      user =>
+        user.last_name.toLowerCase().indexOf(name) > -1 ||
+        user.first_name.toLowerCase().indexOf(name) > -1,
+    );
+    setFacilityUsers(filteredUsers);
+  };
+
+  const handleSearchTextChange = newText => {
+    setSearchText(newText);
+    filterUser(newText);
+  };
+
+  const handleButtonPress = () => {
+    navigation.navigate('AddUser', {
+      users: users,
+      facilityName: facilityName,
+      facilityId: facilityId,
+    });
+  };
+
+  useEffect(() => {
+    setFacilityUsers(users);
+  }, [props]);
+
   return (
     <View style={styles.tabContainer}>
-      {users?.map((user, index) => {
+      <View style={{flexDirection: 'row', alignItems: 'center'}}>
+        <SearchBar
+          placeholder={'Search User'}
+          value={searchText}
+          onChangeText={handleSearchTextChange}
+          platform={Platform.OS}
+          containerStyle={{marginBottom: 12, flexGrow: 1}}
+        />
+
+        {roles === 'admin' && (
+          <Button
+            onPress={handleButtonPress}
+            icon={
+              <Icon name="plus" size={16} color="white" type="font-awesome-5" />
+            }
+            buttonStyle={{backgroundColor: '#065617', borderRadius: 20}}
+          />
+        )}
+      </View>
+      {_facilityUsers?.map((user, index) => {
         const fullName = `${user.last_name}, ${user.first_name}`;
 
         return (
           <View
             key={index}
-            style={{flexDirection: 'row', alignItems: 'center'}}>
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              marginVertical: 8,
+            }}>
             <Image
               style={{height: 32, width: 32, marginRight: 10}}
               source={
@@ -284,23 +343,28 @@ export const Facility = ({route, navigation}) => {
   const {created_by, facility_name, id} = route.params;
 
   const {getUser} = useContext(AuthContext);
-  const {api_token} = getUser();
+  const {api_token, roles} = getUser();
 
-  const {data: ledger, doFetch: fetchLedger} = useFetch();
-  const {data: facilityInfo, doFetch: fetchFacilityInfo} = useFetch();
+  const {data: ledger, doFetch: fetchLedger, clear: clearLedger} = useFetch();
+  const {
+    data: facilityInfo,
+    doFetch: fetchFacilityInfo,
+    clear: clearFacilities,
+  } = useFetch();
   const {data: items, doFetch: fetchItems} = useFetch(
     insertCategories(api_token),
   );
+  const {
+    data: createdByUser,
+    doFetch: fetchCreatedByUser,
+    clear: clearCreatedByUser,
+  } = useFetch(getFullNameOfUser);
 
-  const [createdByUser, setCreatedByUser] = useState('');
-
-  const getUsersData = async () => {
-    const createdBy = await getUserById(created_by, api_token);
-    setCreatedByUser(createdBy.data.first_name);
-  };
-
-  const clearUserData = () => {
-    setCreatedByUser('');
+  const handleGoBack = () => {
+    navigation.goBack();
+    clearLedger();
+    clearCreatedByUser();
+    clearFacilities();
   };
 
   useEffect(() => {
@@ -310,9 +374,11 @@ export const Facility = ({route, navigation}) => {
   }, []);
 
   useEffect(() => {
-    getUsersData();
-    getFacilityLedger(api_token, id, 1, fetchLedger);
-    getFacility(api_token, id, fetchFacilityInfo);
+    if (!createdByUser) getUserById(api_token, created_by, fetchCreatedByUser);
+
+    if (!ledger) getFacilityLedger(api_token, id, 1, fetchLedger);
+
+    if (!facilityInfo) getFacility(api_token, id, fetchFacilityInfo);
   }, [route]);
 
   return (
@@ -320,10 +386,7 @@ export const Facility = ({route, navigation}) => {
       <CustomHeader
         title={facility_name}
         type={1}
-        LeftComponentFunc={() => {
-          navigation.goBack();
-          clearUserData();
-        }}
+        LeftComponentFunc={handleGoBack}
       />
 
       <Tab.Navigator
@@ -342,12 +405,20 @@ export const Facility = ({route, navigation}) => {
               {...route.params}
               {...facilityInfo}
               numberOfActiveItems={getNumberOfActiveItems(items)}
-              created_by={createdByUser}
+              created_by={createdByUser ?? ''}
             />
           )}
         </Tab.Screen>
         <Tab.Screen name="Users" options={{tabBarLabel: 'Users'}}>
-          {props => <FacilityUsers users={facilityInfo?.users} />}
+          {props => (
+            <FacilityUsers
+              users={facilityInfo?.users}
+              navigation={navigation}
+              roles={roles}
+              facilityName={facility_name}
+              facilityId={id}
+            />
+          )}
         </Tab.Screen>
         <Tab.Screen name="Inventory" options={{tabBarLabel: 'Inventory'}}>
           {props => (

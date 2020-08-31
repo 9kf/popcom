@@ -1,26 +1,21 @@
 import React, {useState, useEffect, useContext, useMemo} from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   ScrollView,
   Image,
   RefreshControl,
 } from 'react-native';
-import {Picker} from '@react-native-community/picker';
-import {Divider} from 'react-native-elements';
 import {
   CustomHeader,
   InfoBlock,
   CollapsibleItemBlock,
   ItemBatchInfo,
-  ErrorHandlingField,
 } from '../components';
 
-import {APP_THEME} from '../utils/constants';
 import {getUserById, getUserFacilities} from '../utils/helper';
 import {AuthContext} from '../context';
-import {getFacilities, getFacilityLedger} from '../utils/routes';
+import {getFacilities} from '../utils/routes';
 import {useFetch} from '../hooks';
 
 const logo = require('../../images/logo/popcom-logo.png');

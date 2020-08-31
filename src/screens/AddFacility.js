@@ -1,21 +1,22 @@
-import React, {useState, useContext, useEffect} from 'react';
-import * as R from 'ramda';
+import React, {useContext, useEffect} from 'react';
 
 import {View, Text, StyleSheet, ScrollView, TextInput} from 'react-native';
 import {Picker} from '@react-native-community/picker';
 import {
   CustomHeader,
   ErrorHandlingField,
-  ImagePickerComponent,
   PlaceFinder,
+  ImagePickerComponent,
 } from '../components';
-import {Button, Icon, Card} from 'react-native-elements';
+import {Button, Icon} from 'react-native-elements';
 
 import {AuthContext} from '../context';
 import {useFetch, useForm} from '../hooks';
-import {FACILITY_TYPE, POPCOM_URL, APP_THEME} from '../utils/constants';
+import {APP_THEME} from '../utils/constants';
+import {getFacilityTypesWithHook, createFacility} from '../utils/routes';
 
 const FORM_KEYS = {
+  IMAGE: 'image',
   FIRST_NAME: 'first_name',
   LAST_NAME: 'last_name',
   CONTACT_NUMBER: 'contact_number',
@@ -36,18 +37,27 @@ const FORM_KEYS = {
 export const AddFacility = ({navigation}) => {
   const {getUser} = useContext(AuthContext);
   const {api_token} = getUser();
-  const {data, isLoading, errorMessage, doFetch} = useFetch();
+
+  const {
+    data: facilityCreated,
+    isLoading: loadingCreateFacility,
+    errorMessage: createFacilityError,
+    doFetch: _createFacility,
+  } = useFetch();
+
+  const {data: facilityTypes, doFetch: fetchFacilityTypes} = useFetch();
 
   const getRequestBodyFromValues = formValues => {
-    return R.pipe(
-      R.assoc(FORM_KEYS.ADDRESS, formValues[FORM_KEYS.ADDRESS]?.place_name),
-      R.assoc(
-        FORM_KEYS.PROVINCE,
-        formValues[FORM_KEYS.ADDRESS]?.context[1].text,
-      ),
-      R.assoc(FORM_KEYS.LONGITUDE, formValues[FORM_KEYS.ADDRESS]?.center[0]),
-      R.assoc(FORM_KEYS.LATITUDE, formValues[FORM_KEYS.ADDRESS]?.center[1]),
-    )(formValues);
+    return {
+      ...formValues,
+      [FORM_KEYS.ADDRESS]: formValues[FORM_KEYS.ADDRESS]?.place_name,
+      [FORM_KEYS.PROVINCE]: formValues[FORM_KEYS.ADDRESS]?.context[1]?.text,
+      [FORM_KEYS.LONGITUDE]: formValues[FORM_KEYS.ADDRESS]?.center[0],
+      [FORM_KEYS.LATITUDE]: formValues[FORM_KEYS.ADDRESS]?.center[1],
+      [FORM_KEYS.IMAGE]: `data:${formValues[FORM_KEYS.IMAGE]?.type};base64,${
+        formValues[FORM_KEYS.IMAGE]?.data
+      }`,
+    };
   };
 
   const validate = formValues => {
@@ -61,40 +71,35 @@ export const AddFacility = ({navigation}) => {
 
     //required fields must not be empty
     requiredFields.forEach(key => {
-      if (!newValues[FORM_KEYS[key]] || newValues[FORM_KEYS[key]].trim() === '')
+      if (
+        !newValues[FORM_KEYS[key]] ||
+        newValues[FORM_KEYS[key]].toString().trim() === ''
+      )
         errors[FORM_KEYS[key]] = `${FORM_KEYS[key]} must not be empty`;
     });
 
     return errors;
   };
 
-  const createFacility = async formValues => {
-    const requestBody = new URLSearchParams(
-      getRequestBodyFromValues(formValues),
-    );
-    const endpoint = `${POPCOM_URL}/api/create-facility?${requestBody.toString()}`;
-    const options = {
-      headers: {
-        accept: 'application/json',
-      },
-      method: 'post',
-    };
-    doFetch(endpoint, options, () => alert('failed to create facility'));
+  const handleCreateFacility = async formValues => {
+    const requestBody = getRequestBodyFromValues(formValues);
+    createFacility(requestBody, _createFacility);
   };
 
   const initialState = {
-    [FORM_KEYS.FACILITY_TYPE]: FACILITY_TYPE[0].name,
+    [FORM_KEYS.FACILITY_TYPE]: 1,
     [FORM_KEYS.API_TOKEN]: api_token,
     [FORM_KEYS.USER_STATUS]: '1',
     [FORM_KEYS.FACILITY_STATUS]: '1',
   };
+
   const {
     onFieldValueChange,
     onFormSubmit,
     resetForm,
     errors,
     formValues,
-  } = useForm(initialState, createFacility, validate);
+  } = useForm(initialState, handleCreateFacility, validate);
 
   const handleBack = () => {
     navigation.goBack();
@@ -102,10 +107,20 @@ export const AddFacility = ({navigation}) => {
   };
 
   useEffect(() => {
-    if (data) {
+    return navigation.addListener('focus', () => {
+      getFacilityTypesWithHook(api_token, fetchFacilityTypes);
+    });
+  }, []);
+
+  useEffect(() => {
+    if (facilityCreated) {
       handleBack();
     }
-  }, [data]);
+  }, [facilityCreated]);
+
+  useEffect(() => {
+    if (createFacilityError) alert(createFacilityError);
+  }, [createFacilityError]);
 
   return (
     <View style={styles.container}>
@@ -154,9 +169,10 @@ export const AddFacility = ({navigation}) => {
                 onFieldValueChange(FORM_KEYS.FACILITY_TYPE, value)
               }
               mode={'dropdown'}>
-              {FACILITY_TYPE.map((item, index) => (
-                <Picker.Item key={index} value={item.name} label={item.name} />
-              ))}
+              {facilityTypes &&
+                facilityTypes.map((type, index) => (
+                  <Picker.Item key={index} value={type.id} label={type.type} />
+                ))}
             </Picker>
           </ErrorHandlingField>
 
@@ -214,6 +230,15 @@ export const AddFacility = ({navigation}) => {
               Facility User
             </Text>
           </View>
+
+          <View style={{marginTop: 8, marginBottom: 24}}>
+            <ImagePickerComponent
+              setImage={onFieldValueChange(FORM_KEYS.IMAGE)}
+              image={formValues[FORM_KEYS.IMAGE]}
+              errorMessage={errors[FORM_KEYS.IMAGE]}
+            />
+          </View>
+
           <ErrorHandlingField
             style={APP_THEME.inputContainerStyle}
             title={'First Name'}
@@ -282,7 +307,7 @@ export const AddFacility = ({navigation}) => {
 
         <Button
           title={'Add Facility'}
-          loading={isLoading}
+          loading={loadingCreateFacility}
           buttonStyle={{
             backgroundColor: '#043D10',
             borderRadius: 6,

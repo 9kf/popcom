@@ -1,7 +1,9 @@
 import React, {useContext, useState} from 'react';
+
 import {View, Text, StyleSheet, Image} from 'react-native';
 import {DrawerContentScrollView, DrawerItem} from '@react-navigation/drawer';
 import {Icon} from 'react-native-elements';
+import {ChangePassword} from '../overlays';
 
 import {AuthContext} from '../context';
 
@@ -10,7 +12,9 @@ const logo = require('../../images/logo/popcom-logo.png');
 export const Drawer = props => {
   const {logout, getUser} = useContext(AuthContext);
   const {first_name, last_name, roles, image} = getUser();
+
   const [activeItem, setActiveItem] = useState(0);
+  const [isChangePassOpen, setIsChangePassOpen] = useState(false);
 
   const drawerItems = [
     {
@@ -60,6 +64,10 @@ export const Drawer = props => {
     },
   ];
 
+  const handleChangePasswordPress = () => {
+    setIsChangePassOpen(true);
+  };
+
   const handleItemPress = (pressFunc, index) => () => {
     pressFunc();
     setActiveItem(index);
@@ -67,6 +75,12 @@ export const Drawer = props => {
 
   return (
     <View style={styles.container}>
+      <ChangePassword
+        currentUser={getUser()}
+        isOpen={isChangePassOpen}
+        setIsOpen={setIsChangePassOpen}
+      />
+
       <View style={styles.userInfo}>
         <Image
           source={image ?? logo}
@@ -76,6 +90,11 @@ export const Drawer = props => {
         <View style={{justifyContent: 'center'}}>
           <Text style={styles.name}>{`${first_name} ${last_name}`}</Text>
           <Text style={styles.jobTitle}>{`${roles}`}</Text>
+          <Text
+            style={styles.changePassword}
+            onPress={handleChangePasswordPress}>
+            Change Password
+          </Text>
         </View>
       </View>
 
@@ -236,6 +255,13 @@ const styles = StyleSheet.create({
   jobTitle: {
     color: '#2B6F3A',
     fontSize: 12,
+  },
+  changePassword: {
+    color: '#2B6F3A',
+    fontSize: 12,
+    textDecorationLine: 'underline',
+    fontWeight: 'bold',
+    marginTop: 8,
   },
   logoutStyle: {
     alignSelf: 'stretch',

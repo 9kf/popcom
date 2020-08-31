@@ -20,6 +20,7 @@ import {
   addRequestInventoryScreen,
   AdjustInventory,
   GenerateReport,
+  AddUser,
 } from '../screens';
 
 const DrawerNav = createDrawerNavigator();
@@ -39,6 +40,7 @@ export const DrawerNavigation = () => {
         <DrawerNav.Screen name="AddFacility" component={AddFacility} />
         <DrawerNav.Screen name="Facility" component={Facility} />
         <DrawerNav.Screen name="Item" component={ItemInfo} />
+        <DrawerNav.Screen name="AddUser" component={AddUser} />
         <DrawerNav.Screen
           name="RequestInventory"
           component={RequestInventoryScreen}

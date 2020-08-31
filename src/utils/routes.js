@@ -12,6 +12,27 @@ export const userLogin = async (email, password, doFetch) => {
   doFetch(api.LOGIN.url, options);
 };
 
+export const getUserById = async (apiToken, userId, doFetch) => {
+  const options = {
+    ...api.GET_USER_BY_ID.options,
+    body: JSON.stringify({
+      api_token: apiToken,
+      user_id: userId,
+    }),
+  };
+  doFetch(api.GET_USER_BY_ID.url, options);
+};
+
+export const getUsers = async (apiToken, doFetch) => {
+  const options = {
+    ...api.GET_USERS.options,
+    body: JSON.stringify({
+      api_token: apiToken,
+    }),
+  };
+  doFetch(api.GET_USERS.url, options);
+};
+
 export const getItems = async (apiToken, doFetch) => {
   const options = {
     ...api.ITEMS.options,
@@ -78,6 +99,54 @@ export const getFacility = async (apiToken, facilityId, doFetch) => {
   };
 
   doFetch(api.GET_FACILITY.url, options);
+};
+
+export const getFacilityTypes = async apiToken => {
+  const options = {
+    ...api.GET_FACILITY_TYPES.options,
+    body: JSON.stringify({
+      api_token: apiToken,
+    }),
+  };
+
+  const request = await fetch(api.GET_FACILITY_TYPES.url, options);
+  const jsonResponse = await request.json();
+
+  if (!request.ok || !jsonResponse.success) {
+    alert('There was a problem getting facility types');
+    return;
+  }
+
+  return jsonResponse.data;
+};
+
+export const getFacilityTypesWithHook = (apiToken, doFetch) => {
+  const options = {
+    ...api.GET_FACILITY_TYPES.options,
+    body: JSON.stringify({
+      api_token: apiToken,
+    }),
+  };
+
+  doFetch(api.GET_FACILITY_TYPES.url, options);
+};
+
+export const createFacility = async (fields, doFetch) => {
+  const options = {
+    ...api.CREATE_FACILITY.options,
+    body: JSON.stringify(fields),
+  };
+
+  doFetch(api.CREATE_FACILITY.url, options);
+};
+
+export const addFacilityUser = async (fields, doFetch) => {
+  const options = {
+    ...api.ADD_FACILITY_USER.options,
+    body: JSON.stringify(fields),
+  };
+
+  doFetch(api.ADD_FACILITY_USER.url, options);
 };
 
 export const getBatchesByFacilityId = async (apiToken, facilityId, doFetch) => {

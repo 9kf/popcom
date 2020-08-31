@@ -4,28 +4,18 @@ import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   TextInput,
   TouchableOpacity,
+  TouchableHighlight,
 } from 'react-native';
-
-import {
-  CustomHeader,
-  ErrorHandlingField,
-  ImagePickerComponent,
-} from '../components';
-
-import {Button, Icon, Overlay, Divider} from 'react-native-elements';
-
+import {CustomHeader, ErrorHandlingField} from '../components';
+import {Button, Icon, Overlay} from 'react-native-elements';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
 import {AuthContext} from '../context';
-
-import {CATEGORIES, POPCOM_URL, APP_THEME} from '../utils/constants';
-
-import {useForm, useFetch} from '../hooks';
-
-import {colorShade} from '../utils/helper';
+import {POPCOM_URL, APP_THEME} from '../utils/constants';
+import {adjustInventory} from '../utils/api';
+import {colorShade, handleInputChange} from '../utils/helper';
 
 const AddBatchInventory = ({isOpen, setIsOpen, addBatch}) => {
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
@@ -33,6 +23,11 @@ const AddBatchInventory = ({isOpen, setIsOpen, addBatch}) => {
 
   const [batchName, setBatchName] = useState('');
   const [quantity, setQuantity] = useState(0);
+
+  const handleButtonPress = () => {
+    addBatch(batchName, expiryDate, quantity);
+    setIsOpen(false);
+  };
 
   const onDateChange = (event, date) => {
     setExpiryDate(date);
@@ -119,10 +114,7 @@ const AddBatchInventory = ({isOpen, setIsOpen, addBatch}) => {
 
         <Button
           title={'Add Batch Inventory'}
-          onPress={() => {
-            addBatch(batchName, expiryDate, quantity);
-            setIsOpen(false);
-          }}
+          onPress={handleButtonPress}
           buttonStyle={{
             backgroundColor: '#043D10',
             borderRadius: 6,
@@ -143,6 +135,68 @@ const AddBatchInventory = ({isOpen, setIsOpen, addBatch}) => {
   );
 };
 
+const AdjustInventoryOverlay = ({
+  isOpen,
+  setIsOpen,
+  apiToken,
+  batch,
+  replaceBatchQuantity,
+}) => {
+  const [newQuantity, setNewQuantity] = useState('');
+  const [isAdjusting, setIsAdjusting] = useState(false);
+
+  const handleOnBackdropPress = () => {
+    setIsOpen(false);
+  };
+
+  const handleAdjustInventory = async () => {
+    try {
+      setIsAdjusting(true);
+
+      const response = await adjustInventory(apiToken, batch?.id, newQuantity);
+      if (response) {
+        handleOnBackdropPress();
+        setNewQuantity('');
+        replaceBatchQuantity(batch?.id, newQuantity);
+      }
+    } catch (e) {
+      console.log(e);
+    } finally {
+      setIsAdjusting(false);
+    }
+  };
+
+  return (
+    <Overlay
+      visible={isOpen}
+      onBackdropPress={handleOnBackdropPress}
+      overlayStyle={{margin: 32, alignSelf: 'stretch'}}>
+      <View>
+        <Text style={{fontWeight: 'bold', fontSize: 16}}>
+          {batch?.batch_name}
+        </Text>
+        <TextInput
+          placeholder={'New Quantity'}
+          keyboardType={'numeric'}
+          style={{borderBottomWidth: 1, borderBottomColor: 'black'}}
+          value={newQuantity}
+          onChangeText={handleInputChange(setNewQuantity)}
+        />
+        <Button
+          title={'Adjust Inventory'}
+          loading={isAdjusting}
+          buttonStyle={{
+            backgroundColor: '#043D10',
+            borderRadius: 6,
+            marginVertical: 20,
+          }}
+          onPress={handleAdjustInventory}
+        />
+      </View>
+    </Overlay>
+  );
+};
+
 export const AdjustInventory = ({route, navigation}) => {
   const {getUser} = useContext(AuthContext);
   const {api_token} = getUser();
@@ -153,6 +207,9 @@ export const AdjustInventory = ({route, navigation}) => {
 
   const [isAddBatchOpen, setIsAddBatchOpen] = useState(false);
   const [batches, setBatches] = useState([]);
+
+  const [isAdjustOpen, setIsAdjustOpen] = useState(false);
+  const [selectedBatch, setSelectedBatch] = useState(null);
 
   const addBatch = async (batchName, expiryDate, quantity) => {
     const endpoint = `${POPCOM_URL}/api/add-starting-inventory`;
@@ -182,6 +239,18 @@ export const AdjustInventory = ({route, navigation}) => {
     setBatches([...batches, response.data]);
   };
 
+  const handleToggleAdjustOverlay = batch => () => {
+    setIsAdjustOpen(true);
+    setSelectedBatch(batch);
+  };
+
+  const replaceBatchQuantity = (id, newQuantity) => {
+    const index = batches.findIndex(batch => batch.id === id);
+    const newBatches = [...batches];
+    newBatches[index] = {...batches[index], quantity: newQuantity};
+    setBatches(newBatches);
+  };
+
   useEffect(() => {
     setBatches(route.params.batches);
   }, [route]);
@@ -194,6 +263,14 @@ export const AdjustInventory = ({route, navigation}) => {
         }}
         title={'Adjust Inventory'}
         type={1}
+      />
+
+      <AdjustInventoryOverlay
+        isOpen={isAdjustOpen}
+        setIsOpen={setIsAdjustOpen}
+        batch={selectedBatch}
+        replaceBatchQuantity={replaceBatchQuantity}
+        apiToken={api_token}
       />
 
       {isAddBatchOpen && (
@@ -279,13 +356,17 @@ export const AdjustInventory = ({route, navigation}) => {
 
             <Text>{batch.quantity}</Text>
 
-            <Icon
-              name="edit"
-              size={20}
-              color="#B3B3B3"
-              type="font-awesome-5"
-              style={{marginLeft: 8}}
-            />
+            <TouchableHighlight
+              onPress={handleToggleAdjustOverlay(batch)}
+              underlayColor={'#F5F5F5'}>
+              <Icon
+                name="edit"
+                size={20}
+                color="#B3B3B3"
+                type="font-awesome-5"
+                style={{marginLeft: 8}}
+              />
+            </TouchableHighlight>
           </View>
         );
       })}

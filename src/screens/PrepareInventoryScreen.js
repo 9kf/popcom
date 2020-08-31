@@ -114,7 +114,12 @@ const CheckoutOverlay = ({isOpen, setIsOpen, items, apiToken, request}) => {
                     alignItems: 'center',
                     marginBottom: 4,
                   }}>
-                  <Text style={{fontWeight: 'bold'}}>
+                  <Text
+                    style={{
+                      fontWeight: 'bold',
+                      width: '80%',
+                      color: APP_THEME.primaryColor,
+                    }}>
                     {item.item.item_name}
                   </Text>
                   <View style={{flexGrow: 1}} />
@@ -133,8 +138,25 @@ const CheckoutOverlay = ({isOpen, setIsOpen, items, apiToken, request}) => {
                           style={{
                             flexDirection: 'row',
                             alignItems: 'center',
+                            marginVertical: 4,
                           }}>
-                          <Text>{batch.batch_name}</Text>
+                          <View>
+                            <View style={{flexDirection: 'row'}}>
+                              <Text
+                                style={{fontWeight: 'bold', maxWidth: '90%'}}>
+                                {batch.batch_name}
+                              </Text>
+                              <Text
+                                style={{marginLeft: 4, color: 'gray'}}>{`(x${
+                                batch.quantity
+                              })`}</Text>
+                            </View>
+                            <Text style={{color: 'gray', fontSize: 16}}>
+                              {new Date(
+                                batch.expiration_date,
+                              ).toLocaleDateString()}
+                            </Text>
+                          </View>
                           <View style={{flexGrow: 1}} />
                           <TextInput
                             style={{

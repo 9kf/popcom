@@ -39,7 +39,7 @@ export const AddItem = ({navigation}) => {
     };
 
     //required fields must not be empty
-    Object.keys(FORM_KEYS).forEach((key, index) => {
+    Object.keys(FORM_KEYS).forEach(key => {
       if (
         !newValues[FORM_KEYS[key]] ||
         newValues[FORM_KEYS[key]].toString().trim() === ''

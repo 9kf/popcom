@@ -1,6 +1,14 @@
-import {useState, useMemo} from 'react';
+import {useState} from 'react';
 
-export const useFetch = callBack => {
+const pipeAsync = (...funcs) => async arg => {
+  const result = await funcs.reduce(async (value, func) => {
+    const newValue = await value;
+    return func(newValue);
+  }, Promise.resolve(arg));
+  return result;
+};
+
+export const useFetch = (...mutationFunctions) => {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setError] = useState(null);
   const [data, setData] = useState(null);
@@ -19,12 +27,14 @@ export const useFetch = callBack => {
       console.log(res);
       if (!res.ok || !json.success) {
         console.log(json);
-        setError('Something went wrong');
+        setError(json.errors[0] ?? 'Something went wrong');
         return;
       }
 
-      if (callBack) {
-        setData(await callBack(json.data));
+      if (mutationFunctions.length > 0) {
+        const newData = await pipeAsync(...mutationFunctions, setData)(
+          json.data,
+        );
         return;
       }
 

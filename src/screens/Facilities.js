@@ -8,7 +8,7 @@ import {AuthContext} from '../context';
 import {useFetch} from '../hooks';
 import {getFacilities} from '../utils/routes';
 import {APP_THEME} from '../utils/constants';
-import {getUserFacilities} from '../utils/helper';
+import {getUserFacilities, insertFacilityTypes} from '../utils/helper';
 
 const AddFacilityButton = ({navigation}) => (
   <Button
@@ -21,7 +21,9 @@ const AddFacilityButton = ({navigation}) => (
 export const Facilities = ({navigation}) => {
   const {getUser} = useContext(AuthContext);
   const {api_token, roles, facility_id} = getUser();
+
   const {data: facilities, errorMessage, isLoading, doFetch} = useFetch(
+    insertFacilityTypes(api_token),
     getUserFacilities(roles, facility_id),
   );
 

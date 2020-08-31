@@ -94,13 +94,13 @@ export const adjustInventory = async (apiToken, batchId, newQuantity) => {
   };
 
   const request = await fetch(endpoint, options);
+  const response = await request.json();
 
-  if (!request.ok) {
+  if (!request.ok || !response.success) {
     alert('There was a problem adjusting the inventory');
     return;
   }
 
-  const response = await request.json();
   return response.data;
 };
 

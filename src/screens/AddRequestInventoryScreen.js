@@ -7,25 +7,20 @@ import {
   StyleSheet,
   ScrollView,
   TextInput,
-  Picker,
   TouchableOpacity,
 } from 'react-native';
-
+import {Picker} from '@react-native-community/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
-
 import {CustomHeader, ErrorHandlingField} from '../components';
-
 import {Button, Icon, Overlay} from 'react-native-elements';
 
 import {AuthContext} from '../context';
-
 import {
   createRequestInventory,
   editRequestInventory,
   getItems,
   getFacilities,
 } from '../utils/api';
-
 import {APP_THEME} from '../utils/constants';
 
 const ItemsOverlay = ({
