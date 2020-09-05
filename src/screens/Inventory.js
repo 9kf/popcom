@@ -33,7 +33,7 @@ const FacilityPicker = ({facilities, selectedFacility, onChangeFacility}) => {
 
 export const Inventory = ({navigation}) => {
   const {getUser} = useContext(AuthContext);
-  const {api_token, roles, facility_id} = getUser();
+  const {api_token, roles, id} = getUser();
 
   const [selectedFacility, setSelectedFacility] = useState('');
   const {
@@ -51,7 +51,7 @@ export const Inventory = ({navigation}) => {
 
   const mUserFacilities = useMemo(() => {
     if (roles != 'admin' && facilities) {
-      return facilities.filter(faci => faci.id === facility_id);
+      return facilities.filter(faci => faci.users.indexOf(id) > -1);
     }
     return facilities;
   }, [facilities]);

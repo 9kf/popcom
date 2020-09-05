@@ -237,7 +237,7 @@ const CheckoutOverlay = ({isOpen, setIsOpen, items, apiToken, request}) => {
 
 export const PrepareInventoryScreen = ({navigation}) => {
   const {getUser} = useContext(AuthContext);
-  const {api_token, roles, facility_id} = getUser();
+  const {api_token, roles, id} = getUser();
 
   const [isCheckoutVisible, setIsCheckoutVisible] = useState(false);
 
@@ -265,7 +265,7 @@ export const PrepareInventoryScreen = ({navigation}) => {
 
   const mUserFacilities = useMemo(() => {
     if (roles != 'admin' && facilities)
-      return facilities.filter(faci => faci.id === facility_id);
+      return facilities.filter(faci => faci.users.indexOf(id) > -1);
 
     return facilities ?? [];
   }, [facilities]);

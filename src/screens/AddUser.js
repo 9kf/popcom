@@ -10,7 +10,7 @@ import {
   Alert,
   TextInput,
 } from 'react-native';
-import {Text, Icon, Button} from 'react-native-elements';
+import {Icon, Button} from 'react-native-elements';
 import {
   CustomHeader,
   TextCombo,
@@ -19,7 +19,7 @@ import {
 } from '../components';
 
 import {AuthContext} from '../context';
-import {getUsers, addFacilityUser} from '../utils/routes';
+import {getUsers, addFacilityUser, addUserToFacility} from '../utils/routes';
 import {APP_THEME} from '../utils/constants';
 import {useFetch, useForm} from '../hooks';
 
@@ -33,9 +33,12 @@ const AddfromCurrentUsers = ({
   apiToken,
   registeredUsers,
   facilityName,
+  facilityId,
 }) => {
   const getAvailableFacilityUsers = currFacilityUsers => facilityUsers => {
-    const currentFacilityUsersEmail = currFacilityUsers.map(user => user.email);
+    const currentFacilityUsersEmail = currFacilityUsers.map(
+      user => user.user.email,
+    );
 
     return facilityUsers.filter(
       user => currentFacilityUsersEmail.indexOf(user.email) < 0,
@@ -49,7 +52,17 @@ const AddfromCurrentUsers = ({
     doFetch: fetchUsers,
   } = useFetch(getAvailableFacilityUsers(registeredUsers));
 
+  const {
+    data: addUser,
+    errorMessage: addUserError,
+    doFetch: _addUserToFacility,
+  } = useFetch();
+
   const handleUsersReload = () => getUsers(apiToken, fetchUsers);
+
+  const handleAddUser = userId => async () => {
+    addUserToFacility(apiToken, userId, facilityId, _addUserToFacility);
+  };
 
   const handleAvailableUserPress = user => () => {
     Alert.alert(
@@ -61,7 +74,7 @@ const AddfromCurrentUsers = ({
           onPress: () => console.log('Cancel Pressed'),
           style: 'cancel',
         },
-        {text: 'OK', onPress: () => console.log('OK Pressed')},
+        {text: 'OK', onPress: handleAddUser(user.id)},
       ],
       {cancelable: false},
     );
@@ -72,6 +85,14 @@ const AddfromCurrentUsers = ({
       handleUsersReload();
     });
   }, []);
+
+  useEffect(() => {
+    if (addUser) navigation.navigate('Facilities');
+  }, [addUser]);
+
+  useEffect(() => {
+    if (addUserError) alert(addUserError);
+  }, [addUserError]);
 
   return (
     <View style={styles.container}>
@@ -313,6 +334,7 @@ export const AddUser = ({navigation, route}) => {
             <AddfromCurrentUsers
               {...props}
               apiToken={api_token}
+              facilityId={facilityId}
               registeredUsers={users}
               facilityName={facilityName}
             />

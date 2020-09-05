@@ -32,10 +32,10 @@ const AddItemButton = ({navigation}) => (
 
 export const RequestInventoryScreen = ({navigation}) => {
   const {getUser} = useContext(AuthContext);
-  const {api_token, roles, facility_id} = getUser();
+  const {api_token, roles, id} = getUser();
 
   const {data: facilities, doFetch: fetchFacilities} = useFetch(
-    getUserFacilities(roles, facility_id),
+    getUserFacilities(roles, id),
   );
   const {
     data: inventoryRequests,
@@ -120,7 +120,6 @@ export const RequestInventoryScreen = ({navigation}) => {
             selectedValue={selectedFacility}
             onValueChange={(value, index) => {
               setSelectedFacility(value);
-              if (value != '') lastSelectedFacility = value;
             }}
             mode={'dropdown'}>
             {facilities &&

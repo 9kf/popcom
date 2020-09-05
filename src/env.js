@@ -28,6 +28,10 @@ export const api = {
     url: `${POPCOM_URL}/api/get-user`,
     options: defaultPostOptions,
   },
+  EDIT_USER: {
+    url: `${POPCOM_URL}/api/edit-user`,
+    options: defaultPostOptions,
+  },
   ITEMS: {
     url: `${POPCOM_URL}/api/get-items`,
     options: defaultPostOptions,
@@ -58,6 +62,14 @@ export const api = {
   },
   ADD_FACILITY_USER: {
     url: `${POPCOM_URL}/api/add-facility-user`,
+    options: defaultPostOptions,
+  },
+  ADD_USER_TO_FACILITY: {
+    url: `${POPCOM_URL}/api/add-user-to-facility`,
+    options: defaultPostOptions,
+  },
+  REMOVE_USER_TO_FACILITY: {
+    url: `${POPCOM_URL}/api/remove-user-to-facility`,
     options: defaultPostOptions,
   },
   BATCHES: {

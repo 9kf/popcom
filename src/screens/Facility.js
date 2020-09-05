@@ -1,5 +1,13 @@
 import React, {useEffect, useContext, useRef, useState} from 'react';
-import {View, StyleSheet, ScrollView, Image, Platform} from 'react-native';
+import {
+  View,
+  StyleSheet,
+  ScrollView,
+  Image,
+  Platform,
+  Alert,
+  TouchableHighlight,
+} from 'react-native';
 import {
   CustomHeader,
   TextCombo,
@@ -22,6 +30,7 @@ import {
   getFacilityLedger,
   getFacility,
   getItems,
+  removeUserToFacility,
 } from '../utils/routes';
 import {useFetch} from '../hooks';
 
@@ -161,10 +170,16 @@ const FacilityInfo = props => {
 };
 
 const FacilityUsers = props => {
-  const {users, navigation, facilityName, facilityId, roles} = props;
+  const {users, navigation, facilityName, facilityId, roles, apiToken} = props;
 
   const [_facilityUsers, setFacilityUsers] = useState([]);
   const [searchText, setSearchText] = useState('');
+
+  const {
+    data: removeUser,
+    errorMessage: removeUserError,
+    doFetch: _removeUser,
+  } = useFetch();
 
   const filterUser = name => {
     if (name === '') setFacilityUsers(users);
@@ -182,6 +197,26 @@ const FacilityUsers = props => {
     filterUser(newText);
   };
 
+  const handleRemoveUser = userId => async () => {
+    removeUserToFacility(apiToken, userId, facilityId, _removeUser);
+  };
+
+  const handleRemovePressed = user => () => {
+    Alert.alert(
+      'Confirm',
+      `Remove ${user.first_name} to the ${facilityName} facility?`,
+      [
+        {
+          text: 'Cancel',
+          onPress: () => console.log('Cancel Pressed'),
+          style: 'cancel',
+        },
+        {text: 'OK', onPress: handleRemoveUser(user.id)},
+      ],
+      {cancelable: false},
+    );
+  };
+
   const handleButtonPress = () => {
     navigation.navigate('AddUser', {
       users: users,
@@ -193,6 +228,14 @@ const FacilityUsers = props => {
   useEffect(() => {
     setFacilityUsers(users);
   }, [props]);
+
+  useEffect(() => {
+    if (removeUser) navigation.goBack();
+  }, [removeUser]);
+
+  useEffect(() => {
+    if (removeUserError) alert(removeUserError);
+  }, [removeUserError]);
 
   return (
     <View style={styles.tabContainer}>
@@ -216,7 +259,7 @@ const FacilityUsers = props => {
         )}
       </View>
       {_facilityUsers?.map((user, index) => {
-        const fullName = `${user.last_name}, ${user.first_name}`;
+        const fullName = `${user.user.last_name}, ${user.user.first_name}`;
 
         return (
           <View
@@ -229,13 +272,32 @@ const FacilityUsers = props => {
             <Image
               style={{height: 32, width: 32, marginRight: 10}}
               source={
-                user.image
-                  ? {uri: `https://popcom.app/images/${user.image}`}
+                user.user.image
+                  ? {uri: `https://popcom.app/images/${user.user.image}`}
                   : logo
               }
               resizeMode={'contain'}
             />
-            <TextCombo title={fullName} subTitle={user.email} />
+            <View style={{flexGrow: 1}}>
+              <TextCombo title={fullName} subTitle={user.user.email} />
+            </View>
+            {roles === 'admin' && (
+              <TouchableHighlight
+                underlayColor={'#F5F5F5'}
+                onPress={handleRemovePressed(user.user)}>
+                <Icon
+                  name="minus"
+                  size={16}
+                  color="white"
+                  containerStyle={{
+                    backgroundColor: 'red',
+                    padding: 8,
+                    borderRadius: 16,
+                  }}
+                  type="font-awesome-5"
+                />
+              </TouchableHighlight>
+            )}
           </View>
         );
       })}
@@ -369,7 +431,11 @@ export const Facility = ({route, navigation}) => {
 
   useEffect(() => {
     return navigation.addListener('focus', () => {
+      clearLedger();
+      clearCreatedByUser();
+      clearFacilities();
       getItems(api_token, fetchItems);
+      navigation.jumpTo('Info');
     });
   }, []);
 
@@ -417,6 +483,7 @@ export const Facility = ({route, navigation}) => {
               roles={roles}
               facilityName={facility_name}
               facilityId={id}
+              apiToken={api_token}
             />
           )}
         </Tab.Screen>

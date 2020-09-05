@@ -20,11 +20,11 @@ const AddFacilityButton = ({navigation}) => (
 
 export const Facilities = ({navigation}) => {
   const {getUser} = useContext(AuthContext);
-  const {api_token, roles, facility_id} = getUser();
+  const {api_token, roles, id} = getUser();
 
   const {data: facilities, errorMessage, isLoading, doFetch} = useFetch(
     insertFacilityTypes(api_token),
-    getUserFacilities(roles, facility_id),
+    getUserFacilities(roles, id),
   );
 
   const handleFacilitiesReload = () => {

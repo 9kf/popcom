@@ -19,7 +19,7 @@ const logo = require('../../images/logo/popcom-logo.png');
 
 export const Home = ({navigation}) => {
   const {getUser} = useContext(AuthContext);
-  const {first_name, api_token} = getUser();
+  const {first_name, api_token, image} = getUser();
 
   const {
     data: totalDispenseTransactions,
@@ -42,7 +42,7 @@ export const Home = ({navigation}) => {
       <View style={profileStyles.profileSection}>
         <TouchableOpacity onPress={() => navigation.openDrawer()}>
           <Image
-            source={logo}
+            source={image ? `https://popcom.app/images/${image}` : logo}
             style={profileStyles.profilePic}
             resizeMode={'contain'}
           />

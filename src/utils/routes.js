@@ -33,6 +33,15 @@ export const getUsers = async (apiToken, doFetch) => {
   doFetch(api.GET_USERS.url, options);
 };
 
+export const editUser = async (fields, doFetch) => {
+  const options = {
+    ...api.EDIT_USER.options,
+    body: JSON.stringify(fields),
+  };
+
+  doFetch(api.EDIT_USER.url, options);
+};
+
 export const getItems = async (apiToken, doFetch) => {
   const options = {
     ...api.ITEMS.options,
@@ -147,6 +156,42 @@ export const addFacilityUser = async (fields, doFetch) => {
   };
 
   doFetch(api.ADD_FACILITY_USER.url, options);
+};
+
+export const addUserToFacility = async (
+  apiToken,
+  userId,
+  facilityId,
+  doFetch,
+) => {
+  const options = {
+    ...api.ADD_USER_TO_FACILITY.options,
+    body: JSON.stringify({
+      api_token: apiToken,
+      user_id: userId,
+      facility_id: facilityId,
+    }),
+  };
+
+  doFetch(api.ADD_USER_TO_FACILITY.url, options);
+};
+
+export const removeUserToFacility = async (
+  apiToken,
+  userId,
+  facilityId,
+  doFetch,
+) => {
+  const options = {
+    ...api.REMOVE_USER_TO_FACILITY.options,
+    body: JSON.stringify({
+      api_token: apiToken,
+      user_id: userId,
+      facility_id: facilityId,
+    }),
+  };
+
+  doFetch(api.REMOVE_USER_TO_FACILITY.url, options);
 };
 
 export const getBatchesByFacilityId = async (apiToken, facilityId, doFetch) => {

@@ -1,11 +1,21 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect, useContext} from 'react';
 
 import {View, TextInput} from 'react-native';
 import {Text, Overlay, Button, Icon} from 'react-native-elements';
 import {handleInputChange} from '../utils/helper';
-import {APP_THEME} from '../utils/constants';
+
+import {AuthContext} from '../context';
+import {editUser} from '../utils/routes';
+import {useFetch} from '../hooks';
 
 export const ChangePassword = ({isOpen, setIsOpen, currentUser}) => {
+  const {logout} = useContext(AuthContext);
+
+  const {
+    data: userEdit,
+    errorMessage: userEditError,
+    doFetch: _userEdit,
+  } = useFetch();
   const [newPass, setNewPass] = useState('');
 
   const handleChangePass = () => {
@@ -15,14 +25,25 @@ export const ChangePassword = ({isOpen, setIsOpen, currentUser}) => {
       last_name: currentUser.last_name,
       contact_number: currentUser.contact_number,
       email: currentUser.email,
+      password: newPass,
       status: 1,
       api_token: currentUser.api_token,
     };
+
+    editUser(newValues, _userEdit);
   };
 
   const handleBackDropPress = () => {
     setIsOpen(false);
   };
+
+  useEffect(() => {
+    if (userEdit) logout();
+  }, [userEdit]);
+
+  useEffect(() => {
+    if (userEditError) alert(userEditError);
+  }, [userEditError]);
 
   return (
     <View>
@@ -48,6 +69,8 @@ export const ChangePassword = ({isOpen, setIsOpen, currentUser}) => {
           <Button
             title={'Change'}
             //   loading={loadingCreateUser}
+            disabled={newPass === ''}
+            disabledTitleStyle={{color: 'gray'}}
             buttonStyle={{
               backgroundColor: '#043D10',
               borderRadius: 6,

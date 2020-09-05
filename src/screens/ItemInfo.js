@@ -99,14 +99,14 @@ export const ItemInfo = ({route, navigation}) => {
   const {item_name, created_by} = route.params;
 
   const {getUser} = useContext(AuthContext);
-  const {api_token, roles, facility_id} = getUser();
+  const {api_token, roles, id} = getUser();
 
   const {
     data: facilities,
     isLoading: loadingFacilities,
     doFetch: fetchFacilities,
     clear: clearFacilities,
-  } = useFetch(getUserFacilities(roles, facility_id));
+  } = useFetch(getUserFacilities(roles, id));
 
   const [createdByUser, setCreatedByUser] = useState('');
 

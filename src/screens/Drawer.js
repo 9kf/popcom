@@ -83,7 +83,7 @@ export const Drawer = props => {
 
       <View style={styles.userInfo}>
         <Image
-          source={image ?? logo}
+          source={image ? `https://popcom.app/images/${image}` : logo}
           style={styles.profilePic}
           resizeMode={'contain'}
         />

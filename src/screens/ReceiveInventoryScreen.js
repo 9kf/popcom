@@ -22,7 +22,7 @@ let copyOfAllRequests = [];
 
 export const ReceiveInventoryScreen = ({navigation}) => {
   const {getUser} = useContext(AuthContext);
-  const {api_token, roles, facility_id} = getUser();
+  const {api_token, roles, id} = getUser();
 
   const [facilities, setFacilities] = useState([]);
   const [selectedFacility, setSelectedFacility] = useState(null);
@@ -48,15 +48,6 @@ export const ReceiveInventoryScreen = ({navigation}) => {
     });
 
     copyOfAllRequests = newRequestData;
-
-    // if (activeFilter != 'all') {
-    //   const filteredRequests = newRequestData.filter(
-    //     data => data.transferDetails.status === activeFilter,
-    //   );
-    //   setRequests(filteredRequests);
-    //   return;
-    // }
-
     setRequests(newRequestData);
   };
 
@@ -77,7 +68,7 @@ export const ReceiveInventoryScreen = ({navigation}) => {
     return navigation.addListener('focus', () => {
       getFacilities(api_token).then(data => {
         if (roles != 'admin') {
-          const userFacility = data.filter(faci => faci.id === facility_id);
+          const userFacility = data.filter(faci => faci.users.indexOf(id) > -1);
           setFacilities(userFacility);
           return;
         }

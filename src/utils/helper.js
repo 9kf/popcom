@@ -57,9 +57,9 @@ export const colorShade = (col, amt) => {
   return `#${rr}${gg}${bb}`;
 };
 
-export const getUserFacilities = (roles, userFacilityId) => facilities => {
+export const getUserFacilities = (roles, userId) => facilities => {
   if (roles != 'admin' && facilities) {
-    return facilities.filter(faci => faci.id === userFacilityId);
+    return facilities.filter(faci => faci.users.indexOf(userId) > -1);
   }
   return facilities;
 };

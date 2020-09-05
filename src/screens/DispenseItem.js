@@ -124,7 +124,7 @@ const CheckoutCount = ({onPressFunc, count = 0}) => (
 
 export const DispenseItem = ({navigation}) => {
   const {getUser} = useContext(AuthContext);
-  const {api_token, roles, facility_id} = getUser();
+  const {api_token, roles, id} = getUser();
 
   const {
     data: items,
@@ -153,7 +153,7 @@ export const DispenseItem = ({navigation}) => {
     const responseJson = await request.json();
     if (roles != 'admin') {
       const userFacility = responseJson.data.filter(
-        faci => faci.id === facility_id,
+        faci => faci.users.indexOf(id) > -1,
       );
       setFacilities(userFacility);
       return;
