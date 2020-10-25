@@ -16,6 +16,8 @@ import {useFetch} from '../hooks';
 import {getTotalDispenseCount, getTotalInventoryCount} from '../utils/routes';
 
 const logo = require('../../images/logo/popcom-logo.png');
+const otherLogo = require('../../images/logo-with-title/logo-with-title.png');
+const dohLogo = require('../../images/doh-logo/doh-logo.png');
 
 export const Home = ({navigation}) => {
   const {getUser} = useContext(AuthContext);
@@ -221,6 +223,19 @@ export const Home = ({navigation}) => {
                 </Text>
               </Card>
             </TouchableHighlight>
+          </View>
+
+          <View style={{flexDirection: 'row', justifyContent: 'space-around'}}>
+            <Image
+              source={otherLogo}
+              style={{width: 150, marginVertical: 10}}
+              resizeMode={'contain'}
+            />
+            <Image
+              source={dohLogo}
+              style={{width: 150, marginVertical: 24}}
+              resizeMode={'contain'}
+            />
           </View>
         </ScrollView>
       </View>

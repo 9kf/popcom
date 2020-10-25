@@ -5,7 +5,7 @@ export * from './counter';
 export * from './customTextInput';
 export * from './errorHandlingField';
 export * from './imagePicker';
-export * from './PlaceFinder';
+export * from './placeFinder';
 export * from './infoBlock';
 export * from './requestCard';
 export * from './ItmCard';
