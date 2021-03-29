@@ -1,5 +1,6 @@
 import {api, keys} from '../env';
 import RNFetchBlob from 'rn-fetch-blob';
+import {Platform} from 'react-native';
 
 export const userLogin = async (email, password, doFetch) => {
   const options = {
@@ -225,17 +226,33 @@ export const getFacilityLedger = async (
 
 export const generateReport = async (apiToken, facilityId, fileName) => {
   let dirs = RNFetchBlob.fs.dirs;
-
+  console.log(dirs.DownloadDir);
   const url = `${
     api.GENERATE_REPORT.url
   }?api_token=${apiToken}&facility_id=${facilityId}`;
   RNFetchBlob.config({
-    fileCache: true,
+    // addAndroidDownloads: {
+    //   title: `Downloading ${fileName}`,
+    //   useDownloadManager: true,
+    //   mediaScannable: true,
+    //   notification: true,
+    //   indicator: true,
+    // },
     path: `${dirs.DownloadDir}/${fileName}`,
+    fileCache: true,
   })
-    .fetch('POST', url)
+    .fetch('POST', url, {'Cache-Control': 'no-store'})
     .then(res => {
-      alert(`The report has been saved to ${res.path()}`);
+      if (Platform.OS === 'android')
+        RNFetchBlob.android.actionViewIntent(
+          res.path(),
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        );
+      alert(
+        `File succesfully downloaded on ${
+          dirs.DownloadDir
+        }/${fileName}. If the file did not open automatically, please download an application that can read the file.`,
+      );
     });
 };
 

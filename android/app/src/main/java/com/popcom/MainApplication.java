@@ -1,4 +1,4 @@
-package com.popcom;
+package com.popcom.app;
 
 import android.app.Application;
 import android.content.Context;

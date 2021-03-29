@@ -1,4 +1,4 @@
-package com.popcom;
+package com.popcom.app;
 
 import com.facebook.react.ReactActivity;
 

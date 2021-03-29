@@ -11,7 +11,8 @@ export const ImagePickerComponent = ({image, setImage, errorMessage}) => {
     const permission = await requestCameraPermission();
     if (permission)
       ImagePicker.showImagePicker({}, response => {
-        setImage(response);
+        console.log(response);
+        if (!response.didCancel) setImage(response);
       });
   };
 

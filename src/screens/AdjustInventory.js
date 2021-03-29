@@ -1,4 +1,4 @@
-import React, {useEffect, useContext, useState} from 'react';
+import React, {useEffect, useContext, useState, useRef} from 'react';
 
 import {
   View,
@@ -16,6 +16,7 @@ import {AuthContext} from '../context';
 import {POPCOM_URL, APP_THEME} from '../utils/constants';
 import {adjustInventory} from '../utils/api';
 import {colorShade, handleInputChange} from '../utils/helper';
+import {format} from 'date-fns';
 
 const AddBatchInventory = ({isOpen, setIsOpen, addBatch}) => {
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
@@ -140,24 +141,38 @@ const AdjustInventoryOverlay = ({
   setIsOpen,
   apiToken,
   batch,
-  replaceBatchQuantity,
+  replaceBatchDetails,
 }) => {
+  const [expiryDate, setExpiryDate] = useState('');
   const [newQuantity, setNewQuantity] = useState('');
   const [isAdjusting, setIsAdjusting] = useState(false);
+  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
+  const expiryTextInputRef = useRef(null);
 
   const handleOnBackdropPress = () => {
     setIsOpen(false);
+    setNewQuantity('');
+    setExpiryDate('');
   };
 
   const handleAdjustInventory = async () => {
     try {
       setIsAdjusting(true);
-
-      const response = await adjustInventory(apiToken, batch?.id, newQuantity);
+      const newExpiryDate =
+        expiryDate !== ''
+          ? (new Date(expiryDate).getTime() / 1000).toFixed(0)
+          : null;
+      const quantity =
+        newQuantity === '' ? batch.quantity.toString() : newQuantity;
+      const response = await adjustInventory(
+        apiToken,
+        batch?.id,
+        quantity,
+        newExpiryDate,
+      );
       if (response) {
         handleOnBackdropPress();
-        setNewQuantity('');
-        replaceBatchQuantity(batch?.id, newQuantity);
+        replaceBatchDetails(batch?.id, newQuantity, expiryDate);
       }
     } catch (e) {
       console.log(e);
@@ -166,21 +181,63 @@ const AdjustInventoryOverlay = ({
     }
   };
 
+  const handleOnDateChange = (event, date) => {
+    setExpiryDate(format(date, 'MMM dd,yyyy'));
+    setIsDatePickerOpen(false);
+  };
+
   return (
     <Overlay
       visible={isOpen}
       onBackdropPress={handleOnBackdropPress}
       overlayStyle={{margin: 32, alignSelf: 'stretch'}}>
       <View>
+        {isDatePickerOpen && (
+          <DateTimePicker
+            value={new Date()}
+            mode={'date'}
+            is24Hour={true}
+            display="default"
+            onChange={handleOnDateChange}
+            onTouchCancel={() => setIsDatePickerOpen(false)}
+          />
+        )}
         <Text style={{fontWeight: 'bold', fontSize: 16}}>
           {batch?.batch_name}
         </Text>
+        <Text style={{marginTop: 8}}>Batch Quantity</Text>
         <TextInput
-          placeholder={'New Quantity'}
+          placeholder={batch?.quantity.toString()}
           keyboardType={'numeric'}
-          style={{borderBottomWidth: 1, borderBottomColor: 'black'}}
+          style={{
+            borderBottomWidth: 1,
+            borderBottomColor: 'black',
+            paddingVertical: 0,
+          }}
           value={newQuantity}
           onChangeText={handleInputChange(setNewQuantity)}
+        />
+        <Text style={{marginTop: 8}}>Expiry Date</Text>
+        <TextInput
+          ref={expiryTextInputRef}
+          placeholder={
+            batch
+              ? format(
+                  new Date(batch.expiration_date),
+                  'MMM dd,yyyy',
+                ).toString()
+              : ''
+          }
+          style={{
+            borderBottomWidth: 1,
+            borderBottomColor: 'black',
+            paddingVertical: 0,
+          }}
+          value={expiryDate}
+          onFocus={() => {
+            setIsDatePickerOpen(true);
+            expiryTextInputRef.current.blur();
+          }}
         />
         <Button
           title={'Adjust Inventory'}
@@ -240,14 +297,22 @@ export const AdjustInventory = ({route, navigation}) => {
   };
 
   const handleToggleAdjustOverlay = batch => () => {
-    setIsAdjustOpen(true);
     setSelectedBatch(batch);
+    setIsAdjustOpen(true);
   };
 
-  const replaceBatchQuantity = (id, newQuantity) => {
+  const replaceBatchDetails = (id, newQuantity, newExpiratyDate) => {
     const index = batches.findIndex(batch => batch.id === id);
     const newBatches = [...batches];
     newBatches[index] = {...batches[index], quantity: newQuantity};
+
+    if (newExpiratyDate) {
+      newBatches[index] = {
+        ...batches[index],
+        expiration_date: new Date(newExpiratyDate).toString(),
+      };
+    }
+
     setBatches(newBatches);
   };
 
@@ -269,7 +334,7 @@ export const AdjustInventory = ({route, navigation}) => {
         isOpen={isAdjustOpen}
         setIsOpen={setIsAdjustOpen}
         batch={selectedBatch}
-        replaceBatchQuantity={replaceBatchQuantity}
+        replaceBatchDetails={replaceBatchDetails}
         apiToken={api_token}
       />
 
@@ -347,10 +412,10 @@ export const AdjustInventory = ({route, navigation}) => {
               <Text style={{fontWeight: 'bold', fontSize: 18}}>
                 {batch.batch_name}
               </Text>
-              <Text
-                style={{color: '#B7B7B7', fontSize: 12}}>{`Expiry: ${new Date(
-                batch.expiration_date.split(' ')[0],
-              ).toLocaleDateString()}`}</Text>
+              <Text style={{color: '#B7B7B7', fontSize: 12}}>{`Expiry: ${format(
+                new Date(batch.expiration_date),
+                'MMM, dd,yyyy',
+              )}`}</Text>
             </View>
             <View style={{flexGrow: 1}} />
 

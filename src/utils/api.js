@@ -77,13 +77,22 @@ export const getFacilityBatches = async (apiToken, facilityId) => {
   return response.data;
 };
 
-export const adjustInventory = async (apiToken, batchId, newQuantity) => {
+export const adjustInventory = async (
+  apiToken,
+  batchId,
+  newQuantity,
+  newExpiryDate = null,
+) => {
   const endpoint = `${POPCOM_URL}/api/adjust-inventory`;
   const body = {
     api_token: apiToken,
     batch_id: batchId,
     quantity: newQuantity,
+    expiration_date: newExpiryDate,
   };
+
+  if (!newExpiryDate) delete body.expiration_date;
+
   const options = {
     method: 'post',
     headers: {

@@ -233,6 +233,8 @@ const CreateNewUser = ({navigation, facilityId, apiToken}) => {
           style={APP_THEME.inputContainerStyle}>
           <TextInput
             value={formValues[FORM_KEYS.EMAIL]}
+            keyboardType="email-address"
+            autoCapitalize="none"
             onChangeText={newValue =>
               onFieldValueChange(FORM_KEYS.EMAIL, newValue)
             }
@@ -246,6 +248,7 @@ const CreateNewUser = ({navigation, facilityId, apiToken}) => {
           errorMessage={errors[FORM_KEYS.PASSWORD]}>
           <TextInput
             value={formValues[FORM_KEYS.PASSWORD]}
+            autoCapitalize="none"
             onChangeText={newValue =>
               onFieldValueChange(FORM_KEYS.PASSWORD, newValue)
             }
@@ -260,6 +263,7 @@ const CreateNewUser = ({navigation, facilityId, apiToken}) => {
           style={APP_THEME.inputContainerStyle}>
           <TextInput
             value={formValues[FORM_KEYS.CONTACT_NUMBER]}
+            keyboardType="numeric"
             onChangeText={newValue =>
               onFieldValueChange(FORM_KEYS.CONTACT_NUMBER, newValue)
             }

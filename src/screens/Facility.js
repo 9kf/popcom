@@ -33,6 +33,7 @@ import {
   removeUserToFacility,
 } from '../utils/routes';
 import {useFetch} from '../hooks';
+import {format} from 'date-fns';
 
 import {createMaterialTopTabNavigator} from '@react-navigation/material-top-tabs';
 const Tab = createMaterialTopTabNavigator();
@@ -333,13 +334,11 @@ const FacilityInventory = props => {
 
 const Ledger = props => {
   const {ledger} = props;
-  const dateOptions = {year: 'numeric', month: 'long', day: 'numeric'};
 
+  console.log(ledger);
   const dates = new Set(
     ledger &&
-      ledger.map(line =>
-        new Date(line.created_at).toLocaleDateString('en-US', dateOptions),
-      ),
+      ledger.map(line => format(new Date(line.created_at), 'MMM dd, yyyy')),
   );
 
   return (
@@ -359,10 +358,7 @@ const Ledger = props => {
               {ledger
                 .filter(
                   line =>
-                    new Date(line.created_at).toLocaleDateString(
-                      'en-US',
-                      dateOptions,
-                    ) === date,
+                    format(new Date(line.created_at), 'MMM dd, yyyy') === date,
                 )
                 .map((line, index) => {
                   return (
@@ -370,14 +366,7 @@ const Ledger = props => {
                       key={index}
                       style={{marginLeft: 24, marginVertical: 4}}>
                       <Text style={{fontWeight: '600', fontSize: 16}}>
-                        {`• ${new Date(line.created_at).toLocaleTimeString(
-                          'en-US',
-                          {
-                            hour12: true,
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          },
-                        )}`}
+                        {`• ${format(new Date(line.created_at), 'h:mm a')}`}
                       </Text>
                       <Text style={{color: 'gray'}}>
                         {`${line.user?.first_name} ${
@@ -386,9 +375,9 @@ const Ledger = props => {
                           line.quantity > 0
                             ? `+${line.quantity}`
                             : `${line.quantity}`
-                        } ${line.uom} of ${line.item?.item_name} from ${
-                          line?.facility?.facility_name
-                        }`}
+                        } ${line.uom} from ${line.batch.batch_name} of ${
+                          line.item?.item_name
+                        } from ${line?.facility?.facility_name}`}
                       </Text>
                     </View>
                   );
@@ -413,7 +402,7 @@ export const Facility = ({route, navigation}) => {
     doFetch: fetchFacilityInfo,
     clear: clearFacilities,
   } = useFetch();
-  const {data: items, doFetch: fetchItems} = useFetch(
+  const {data: items, doFetch: fetchItems, clear: clearItems} = useFetch(
     insertCategories(api_token),
   );
   const {
@@ -431,6 +420,7 @@ export const Facility = ({route, navigation}) => {
 
   useEffect(() => {
     return navigation.addListener('focus', () => {
+      clearItems();
       clearLedger();
       clearCreatedByUser();
       clearFacilities();

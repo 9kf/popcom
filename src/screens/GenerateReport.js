@@ -1,11 +1,5 @@
 import React, {useMemo, useEffect, useContext} from 'react';
-import {
-  View,
-  ScrollView,
-  RefreshControl,
-  StyleSheet,
-  PermissionsAndroid,
-} from 'react-native';
+import {View, ScrollView, RefreshControl, StyleSheet} from 'react-native';
 import {Button, Text, Divider} from 'react-native-elements';
 import {CustomHeader} from '../components';
 
@@ -69,8 +63,13 @@ export const GenerateReport = ({navigation}) => {
                   marginBottom: 12,
                   alignItems: 'center',
                 }}>
-                <View style={{flexGrow: 1}}>
-                  <Text style={{fontSize: 18, fontWeight: 'bold'}}>
+                <View style={{flexGrow: 1, width: '60%'}}>
+                  <Text
+                    style={{
+                      fontSize: 18,
+                      fontWeight: 'bold',
+                      flexWrap: 'wrap',
+                    }}>
                     {faci.facility_name}
                   </Text>
                   <Text style={{fontSize: 14, color: 'gray'}}>

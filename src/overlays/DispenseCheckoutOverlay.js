@@ -111,9 +111,10 @@ export const DispenseCheckoutOverlay = props => {
                               batch.item.id === item.id &&
                               batch.item.dispenseCount > 0,
                           )
-                          .map(batch => {
+                          .map((batch, index) => {
                             return (
                               <Text
+                                key={index}
                                 style={{color: '#B7B7B7', fontSize: 12}}>{`(x${
                                 batch.item.dispenseCount
                               }) ${batch.batch_name} Exp. ${new Date(
